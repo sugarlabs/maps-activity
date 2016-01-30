@@ -1,0 +1,734 @@
+<html id="html">
+<head id="head">
+<script src="MediaMarker.js" type="text/javascript"></script>
+<script src="staticMapCanvas.js?v=2" type="text/javascript"></script>
+<script type="text/javascript">
+var canvas,ajaxPort,cometPort,mediaWin,mMrkrs,justSetMap,mapData,mID,mapCover;
+var xo=false;
+var addingMedia=false;
+var tagFilter="";
+var infoMarkers=[];
+var lineList=[];
+var isMedia=true;
+var mDist=0;
+var mesrTime=false;
+var addingInfo=false;
+var isFirstSearch=true;
+var isSecondSearch=true;
+var mapData=null;
+var doRep=false;
+var editTxt="Edit";
+var addTxt="Add";
+var describeTxt="Describe this place";
+var mapYSPAN = 404;
+var mapXSPAN = 640;
+var mapXOFF = 80;
+var addingLines=false;
+var currentLine=-1;
+function gup(nm){nm=nm.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");var rxS="[\\?&]"+nm+"=([^&#]*)";var rx=new RegExp(rxS);var rs=rx.exec(window.location.href);if(!rs){return null;}else{return rs[1];}}
+function load(){
+	ajaxPort = gup("ajaxPort");
+	cometPort = gup("cometPort");
+	mapCover = $("mapCover").getContext("2d");
+	var initLat = gup('lat');
+	var initLng = gup('lng');
+	var initZoom = gup('zoom');
+	if((!initLat)||(!initLng)||(!initZoom)){initLat=29.978;initLng=31.133;initZoom=2}
+	initZoom = parseInt(initZoom);
+	justSetMap = [initLat,initLng,initZoom];
+	if(gup("xo")=="true"){xo=true;}
+	canvas = GMapCanvas2.initialize(initLat, initLng, initZoom, gup("type"));
+	if(xo){lhCometInit();lhMediaQuery();}
+	else{alert("You need an XO to control the map");}
+	closeiWin();
+	setInterval(sendReport, 180000);
+	setTimeout(sendReport, 60000);
+	$("toolbar-en").href="http://maptonomy.appspot.com/toolbar.html?aj="+ajaxPort+"&cm="+cometPort+"&lang=en";
+	$("toolbar-es").href="http://maptonomy.appspot.com/toolbar.html?aj="+ajaxPort+"&cm="+cometPort+"&lang=es";
+	if(gup("lang")=="es"){
+		$("roadmap").innerHTML="Mapa";
+		$("satellite").innerHTML="Sat&eacute;lite";
+		$("hybrid").innerHTML="H&iacute;brido";
+		$("terrain").innerHTML="Relieve";
+		$("center").innerHTML="Centro";
+		$("zoom").innerHTML="Magnificar";
+		editTxt="Editar";
+		addTxt="Crear";
+		describeTxt="Escribe algo aqu&iacute;";
+		$("toolbar-en").style.display="none";
+		$("special").innerHTML="<br/><a href='#' onclick='proyecto()' style='font-size:10pt;'>Proyecto</a><span style='color:#f00;font-size:7pt;vertical-align:top;'>Nuevo</span>";
+	}
+	else if(gup("lang")=="mn"){
+		$("roadmap").innerHTML="&#1075;&#1072;&#1079;&#1088;&#1099;&#1085; &#1079;&#1091;&#1088;&#1072;&#1075;";
+		$("satellite").innerHTML="&#1060;&#1086;&#1090;&#1086;";
+		$("hybrid").innerHTML="&#1075;&#1080;&#1073;&#1088;&#1080;&#1076;";
+		$("terrain").innerHTML="&#1090;&#1086;&#1087;&#1086;&#1075;&#1088;&#1072;&#1092;";
+		$("center").innerHTML="&#1090;&#1257;&#1074;";
+		editTxt="&#1079;&#1072;&#1089;&#1074;&#1072;&#1088;&#1083;&#1072;&#1093;";
+		addTxt="&#1093;&#1080;&#1081;&#1093;";
+		describeTxt="&#1090;&#1086;&#1076;&#1086;&#1088;&#1093;&#1086;&#1081;&#1083;&#1086;&#1093;";
+	}
+	mapXSPAN = ($("map").width+"").replace("px","").replace("pt","")*1.0000000000;
+	mapYSPAN = ($("map").height+"").replace("px","").replace("pt","")*1.0000000000;
+	mapXOFF = ($("map").width+"").replace("px","").replace("pt","")*0.125000000000;
+	canvas.factor=canvas.factor*640/mapXSPAN;
+	canvas.yfactor=canvas.factor*404/mapYSPAN;
+}
+function sendReport(){doRep=true;}
+function lineMode(type){
+	if(addingLines){
+		addingLines = false;
+		$("mapCover").className = "-moz-grab";
+		$("map").className = "-moz-grab";
+		var newScript = document.createElement('script');
+		var dLine = lineList[currentLine];
+		var ptOutput = [];
+		for(var p=0;p<dLine.pts.length;p++){
+			ptOutput.push(dLine.pts[p][0] + "|" + dLine.pts[p][1]);
+		}
+		ptOutput = ptOutput.join("|");
+		newScript.src = "http://127.0.0.1:" + ajaxPort + "/addLine.js?id=" + dLine.id + "&col=" + dLine.color.replace("#","") + "&thick=4&pts=" + ptOutput;
+		newScript.type = "text/javascript";
+		newScript.onload = lhAjax;
+		$("head").appendChild(newScript);
+		//showInfo(newScript.src);
+		currentLine = -1;
+		updateLines();
+	}
+	else{
+		addingLines = true;
+		$("mapCover").className = "crosshairMap";
+		$("map").className = "crosshairMap";
+		var chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXTZabcdefghiklmnopqrstuvwxyz";
+		var colorchars = "0123456789abcdef";
+		var string_length = 8;
+		var lineID = '';
+		for(var i=0; i<string_length; i++) {
+			var rnum = Math.floor(Math.random() * chars.length);
+			lineID += chars.substring(rnum,rnum+1);
+		}
+		if(type.indexOf("poly") != -1){
+			lineID = "poly-" + lineID;
+		}
+		var randColor = "";
+		for(var i=0; i<3; i++){
+			var rnum = Math.floor(Math.random() * colorchars.length);
+			randColor += colorchars.substring(rnum,rnum+1);
+		}
+		currentLine = lineList.length;
+		addLine(lineID,randColor,5,[]);
+	}
+}
+function placeVertex(event){
+	var vert = toLatLngArray(event.clientX,event.clientY);
+	lineList[currentLine].pts.push(vert)
+	updateLines();
+}
+function addLine(line_id,line_color,line_thick,line_pts){
+	try{
+		if(line_pts.indexOf("|") != -1){
+			//in |-separated format from Python
+			line_pts_b = line_pts.split("|");
+			line_pts=[];
+			for(var lpi=0;lpi<line_pts_b.length;lpi+=2){
+				line_pts.push([line_pts_b[lpi],line_pts_b[lpi+1]]);
+			}
+		}
+	}
+	catch(e){}
+	for(var l=0;l<lineList.length;l++){
+		if(lineList[l].id==line_id){
+			lineList[l].color="#"+line_color;
+			lineList[l].thickness=line_thick;
+			lineList[l].pts=line_pts;
+			updateLines();
+			return;
+		}
+	}
+	lineList.push({id:line_id,color:"#"+line_color,thickness:line_thick,pts:line_pts});
+	showInfo("Click the line button again to stop.<br/><br/>Clic el boton de linea otra vez a terminar");
+	if(!addingLines){
+		currentLine=lineList.length-1;
+		addingLines=true;
+		lineMode('new');
+	}
+}
+function updateLines(){
+	if(lineList.length == 0){ return }
+	$("mapCover").width=$("mapCover").width;
+	for(var l=0;l<lineList.length;l++){
+		var dLine=lineList[l];
+		if(dLine.pts.length < 2){continue}
+		var lastPt=dLine.pts[0];
+		var drewLast=false;
+		var firstPt=lastPt;
+		if(dLine.id.indexOf("poly")==-1){
+			mapCover.strokeStyle=dLine.color;
+			mapCover.lineWidth=dLine.thickness;
+		}
+		else{
+			mapCover.fillStyle=dLine.color;
+			mapCover.lineWidth=0;
+			//mapCover.strokeStyle="#000";
+			drewLast=true;
+		}
+		if(inBounds(pixelprse(lastPt[0],lastPt[1]))||drewLast){
+			drewLast = true;
+			mapCover.beginPath();
+			mapCover.moveTo(parseInt(pixelprse(lastPt[0],lastPt[1])[0]),parseInt(pixelprse(lastPt[0],lastPt[1])[1]));
+		}
+		for(var p=1;p<dLine.pts.length;p++){
+			var thisPt=dLine.pts[p];
+			if(drewLast){
+				mapCover.lineTo(parseInt(pixelprse(thisPt[0],thisPt[1])[0]),parseInt(pixelprse(thisPt[0],thisPt[1])[1]));
+			}
+			else{
+				if(inBounds(pixelprse(lastPt[0],lastPt[1]))){
+					drewLast=true;
+					mapCover.beginPath();
+					mapCover.moveTo(parseInt(pixelprse(lastPt[0],lastPt[1])[0]),parseInt(pixelprse(lastPt[0],lastPt[1])[1]));
+					mapCover.lineTo(parseInt(pixelprse(thisPt[0],thisPt[1])[0]),parseInt(pixelprse(thisPt[0],thisPt[1])[1]));
+				}
+			}
+			lastPt=thisPt;
+		}
+		if(drewLast){
+			if(dLine.id.indexOf("poly")==-1){
+				mapCover.stroke();
+			}
+			else{
+				mapCover.closePath();
+				mapCover.fill();
+			}
+		}
+	}
+	if(currentLine>=0){
+		//draw a square at each point in the line or polygon
+		for(var p=0;p<lineList[currentLine].pts.length;p++){
+			var thisPt=lineList[currentLine].pts[p];
+			mapCover.fillStyle="#000";
+			mapCover.fillRect(parseInt(pixelprse(thisPt[0],thisPt[1])[0])-6,parseInt(pixelprse(thisPt[0],thisPt[1])[1])-6,12,12);
+		}
+	}
+}
+function inBounds(px){
+	if(px[0]<0){return false;}
+	if(px[0]>820){return false;}
+	if(px[1]<0){return false;}
+	if(px[1]>520){return false;}
+	return true;
+}
+function infoImg(id){
+	showMedia('<div style="color:#fff;font-size:45pt;width:200;">a<br/>b<br/><Media>a</div>');
+	var newScript=document.createElement('script');
+	newScript.src="http://127.0.0.1:" + ajaxPort + "/showMedia.js?id=" + id + "&x=" + ($("iEnc").offsetLeft*1 + 25) + "&y=" + ($("iEnc").offsetTop*1 + 10) + "&up=true&rt=true";
+	newScript.type="text/javascript";
+	newScript.onload=lhAjax;
+	$("head").appendChild(newScript);
+}
+function moveToAddress(swlat,swlng,nelat,nelng,longname){
+	showInfo("Found " + longname + "<br/>...");
+	canvas.fitBounds([[swlat,swlng],[nelat,nelng]]);
+	updateLoc();
+}
+function panoramio(){
+	var panScript=document.createElement('script');
+	var bounds=canvas.get_bounds();
+	var southwest=bounds[0];
+	var northeast=bounds[1];
+	panScript.src="http://www.panoramio.com/map/get_panoramas.php?set=public&from=0&to=15&minx="+southwest[1]+"&miny="+southwest[0]+"&maxx="+northeast[1]+"&maxy="+northeast[0]+"&size=medium&mapfilter=true&callback=panorProcess";
+	panScript.type="text/javascript";
+	panScript.onload=lhAjax;
+	$("head").appendChild(panScript);
+}
+function panorProcess(panPhotoApi){
+	for(var p=0;p<panPhotoApi.photos.length;p++){
+		addInfoMarker(panPhotoApi.photos[p].latitude,panPhotoApi.photos[p].longitude,'img::'+panPhotoApi.photos[p].photo_file_url,'http://chart.apis.google.com/chart?chst=d_map_pin_icon&chld=location|DD0033',true);
+	}
+	canvas.updateImg()
+}
+function wikimapia(){
+	var wmScript=document.createElement('script');
+	var bounds=canvas.get_bounds();
+	var southwest=bounds[0];
+	var northeast=bounds[1];
+	wmScript.src="http://api.wikimapia.org/?function=box&key=BF98697A-C9DB9950-55508AB4-9643CB1A-23509969-23D9FFF3-5B19C5D2-E9CF5DEB&bbox="+southwest[1]+","+southwest[0]+","+northeast[1]+","+northeast[0]+"&count=20&format=jsonp&jsoncallback=processWM";
+	wmScript.type="text/javascript";
+	wmScript.onload=lhAjax;
+	$("head").appendChild(wmScript);
+}
+function processWM(wikiMapiaApi){
+	for(var w=0;w<wikiMapiaApi.folder.length;w++){
+		var newplist=[];
+		for(var ppt=0;ppt<wikiMapiaApi.folder[w].polygon.length;ppt++){
+			newplist.push([wikiMapiaApi.folder[w].polygon[ppt].y,wikiMapiaApi.folder[w].polygon[ppt].x]);
+		}
+		newplist.push(newplist[0]);
+		//lineMode('poly');
+		lineMode('new');
+		lineList[lineList.length-1].pts=newplist;
+		addInfoMarker(wikiMapiaApi.folder[w].location.north,wikiMapiaApi.folder[w].location.east,wikiMapiaApi.folder[w].name + "<br/><small>WikiMapia</small>",'http://chart.apis.google.com/chart?chst=d_map_pin_icon&chld=location|DD0033',true);
+	}
+	updateLines();
+	canvas.updateImg();
+}
+function wikiloc(){
+	var wikiScript=document.createElement('script');
+	var ctr=canvas.get_center();
+	wikiScript.src="http://api.wikilocation.org/articles?lat="+ctr[0]+"&lng="+ctr[1]+"&limit=15&jsonp=wikiprocess&radius=5000";
+	wikiScript.type="text/javascript";
+	wikiScript.onload=lhAjax;
+	$("head").appendChild(wikiScript);
+}
+function wikiprocess(wikiLocApi){
+	for(var w=0;w<wikiLocApi.articles.length;w++){
+		var art=wikiLocApi.articles[w];
+		addInfoMarker(art.lat*1,art.lng*1,'<small>WikiLocation.org</small>wikiEN::'+art.title,'http://chart.apis.google.com/chart?chst=d_map_pin_icon&chld=location|DD0033',true);
+	}
+	canvas.updateImg();
+}
+function preAddInfo(){
+	closeiWin();
+	addingInfo=true;
+	hidePics();
+	$("mapCover").className = "crosshairMap";
+	$("map").className = "crosshairMap";	
+}
+function placeInfoMarker(event){
+	addingInfo = false;
+	loc = toLatLng(event.clientX,event.clientY);
+	addInfoMarker(loc[0],loc[1],describeTxt,"null",true);
+	addedMedia();
+}
+function addInfoMarker(lat,lng,info,icon,showNow){
+	for(var i=0;i<infoMarkers.length;i++){
+		if(infoMarkers[i].getLatLng()[0] == lat){
+			if(infoMarkers[i].getLatLng()[1] == lng){
+				infoMarkers[i].info = unescape(info);
+				return;
+			}
+		}
+	}
+	var mk = MediaMarker();
+	mID="info-"+infoMarkers.length;
+	mk.initialize([lat,lng],null,mID,null,unescape(info),icon);
+	infoMarkers.push(mk);
+	canvas.markerList.push( mk );
+	hidePics();
+	if(showNow){
+		isMedia = false;
+		mID=mk.getMarkerId();
+		showInfo(info);
+	}
+}
+function updateInfo(id){
+	closeiWin();
+	var iMarker = mrkWithId(id);
+	iMarker.info = replaceAll($("infoText").value,"\n","<br/>");
+	var loc = iMarker.getLatLng();
+	var newScript = document.createElement('script');
+	newScript.src = "http://127.0.0.1:" + ajaxPort + "/addInfoMarker.js?lat=" + loc[0] + "&lng=" + loc[1] + "&info=" + iMarker.info + "&icon=" + iMarker.icon + "&isNew=True";
+	newScript.type = "text/javascript";
+	newScript.onload = lhAjax;
+	$("head").appendChild(newScript);
+}
+function editInfoMarker(id){
+	iMarker = mrkWithId(id);
+	mID = id;
+	isMedia = true;
+	showInfo("<textarea id='infoText' style='height:200;width:250;'>" + iMarker.get_info() + "</textarea><br/><input type='button' class='centerButton' value='" + addTxt + "' onclick='updateInfo(\"" + iMarker.getMarkerId() + "\")'/>");
+}
+function lhHideMedia()
+{	var newScript = document.createElement('script');
+	var d = new Date();
+	newScript.src = "http://127.0.0.1:" + ajaxPort + "/hideMedia.js?t="+d.getTime()
+	newScript.type = "text/javascript";
+	$("head").appendChild(newScript);
+}
+function lhCometInit()
+{	var newScript = document.createElement('script');
+	var d = new Date();
+	newScript.src = "http://127.0.0.1:" + cometPort + "/comet.js?t="+d.getTime()
+	newScript.type = "text/javascript";
+	newScript.onload = lhCometResponse;
+	$("head").appendChild(newScript);
+}
+function lhCometResponse(){ lhCometInit(); }
+function lhMediaQuery()
+{	var bounds = canvas.get_bounds();
+	var southWest = bounds[0];
+	var northEast = bounds[1];
+	var newScript = document.createElement('script');
+	newScript.src = "http://127.0.0.1:" + ajaxPort + "/mediaQuery.js?s=" + southWest[0] + "&w=" + southWest[1] + "&n=" + northEast[0] + "&e=" + northEast[1]
+	newScript.type = "text/javascript";
+	newScript.onload = lhAjax;
+	$("head").appendChild(newScript);
+}
+function updateLoc()
+{	var ctr = canvas.get_center();
+	var zoom = canvas.get_zoom();
+	var newScript = document.createElement('script');
+	if(mediaWin != null){
+		newScript.src = "http://127.0.0.1:" + ajaxPort + "/updateLocation.js?lat=" + ctr[0] + "&lng=" + ctr[1] + "&z=" + zoom + "&x=" + ($("iEnc").offsetLeft*1 + 25) + "&y=" + ($("iEnc").offsetTop*1 + 10);
+	}
+	else{
+		newScript.src = "http://127.0.0.1:" + ajaxPort + "/updateLocation.js?lat=" + ctr[0] + "&lng=" + ctr[1] + "&z=" + zoom + "&x=-1&y=-1";
+	}
+	newScript.type = "text/javascript";
+	newScript.onload = lhAjax;
+	$("head").appendChild(newScript);
+	updateLines();
+}
+function $(id){return document.getElementById(id);}
+function mrkWithId(id){
+	for(var i=0;i<canvas.markerList.length;i++){
+		if(canvas.markerList[i].getMarkerId() == id){
+			return canvas.markerList[i];
+		}
+	}
+}
+function lhAjax(){}
+function setMap(lat,lng,zoom,info){
+	if(zoom!=canvas.get_zoom()){canvas.set_zoom(zoom);}
+	var bounds=canvas.get_bounds();
+	var latSpan=Math.abs(bounds[0][0]-bounds[1][0]);
+	var lngSpan=Math.abs(bounds[0][1]-bounds[1][1]);
+	var latDiff=(lat-justSetMap[0])/latSpan;
+	var lngDiff=(lng-justSetMap[1])/lngSpan;
+	if((Math.abs(latDiff)>0.15)||(Math.abs(lngDiff)>0.15)){
+		justSetMap=[lat,lng,zoom];
+		canvas.set_center([1*lat,1*lng]);
+	}
+	if(info){isMedia=true;showInfo(info);}
+	else{closeiWin();}
+}
+function setMap2(lat,lng,zoom,info){
+	if(zoom!=canvas.get_zoom()){canvas.set_zoom(zoom);}
+	if((lat!=canvas.get_center()[0])||(lng!=canvas.get_center()[1])){canvas.set_center([1*lat,1*lng]);}
+	justSetMap=[lat,lng,zoom];
+	if(info){isMedia=true;showInfo(unescape(info));}
+	else{closeiWin();}
+}
+function hidePics(){lhHideMedia();if(!mediaWin){closeiWin();}}
+function findDirs(){
+	var ctr=canvas.get_center();
+	var z=canvas.get_zoom();
+	var right=1*ctr[1]+0.3295875*Math.pow(2,(10-z));
+	var left=1*ctr[1]-0.3295875*Math.pow(2,(10-z));
+	var top=1*ctr[0]+0.2085*Math.pow(2,(10-z));
+	var bottom=1*ctr[0]-0.2085*Math.pow(2,(10-z));
+	if((left>0)&&(right<0)){left-=360;}
+	return [ctr,right,left,top,bottom];
+}
+function dirEast(){var plcs=findDirs();var nuCtr=[plcs[0][0],1.3*plcs[1]-0.3*plcs[2]];canvas.set_center(nuCtr);}
+function dirWest(){var plcs=findDirs();var nuCtr=[plcs[0][0],-0.3*plcs[1]+1.3*plcs[2]];canvas.set_center(nuCtr);}
+function dirNorth(){var plcs=findDirs();var nuCtr=[1.3*plcs[3]-0.3*plcs[4],plcs[0][1]];canvas.set_center(nuCtr);}
+function dirSouth(){var plcs=findDirs();var nuCtr=[-0.3*plcs[3]+1.3*plcs[4],plcs[0][1]];canvas.set_center(nuCtr);}
+function zoomIn(){hidePics();canvas.set_zoom(canvas.get_zoom()+1);updateLoc();}
+function zoomOut(){hidePics();canvas.set_zoom(Math.max(canvas.get_zoom()-1,2));updateLoc();}
+function deleteMedia(){
+	for(i=0;i<canvas.markerList.length;i++){if(canvas.markerList[i].getMarkerId()==mID){
+		canvas.markerList.splice(i,1);
+		canvas.updateImg();
+		break;
+	}}
+}
+function preAddMedia()
+{	if(!mediaWin){closeiWin();}
+	addingMedia = true;
+	hidePics();
+	updateLoc();
+	$("mapCover").className="crosshairMap";
+	$("map").className="crosshairMap";
+}
+function placeAddMedia(event)
+{	var pt=toLatLng(event.clientX, event.clientY);
+	var newScript=document.createElement('script');
+	newScript.src="http://127.0.0.1:" + ajaxPort + "/placeAddMedia.js?lat=" + pt[0] + "&lng=" + pt[1];
+	newScript.type="text/javascript";
+	newScript.onload=lhAjax;
+	$("head").appendChild(newScript);
+}
+function postAddMedia( lat, lng, url, basename, tags )
+{	var mk=MediaMarker();
+	mk.initialize([lat,lng],url,basename,tags);
+	canvas.markerList.push(mk);
+	hidePics();
+	addedMedia();
+	var cell = mk;
+	if (cell != null){infoImg(cell.markerId);}
+	canvas.updateImg();
+	updateLoc();
+}
+function addedMedia()
+{	addingMedia=false;
+	$("mapCover").className="-moz-grab";
+	$("map").className="-moz-grab";
+}
+function toLatLng(x,y){
+	x+=".000000";
+	y+=".000000";
+	var factor=canvas.factor;
+	var yfactor = canvas.yfactor;
+	var ctr=canvas.get_center();
+	var zoom=canvas.get_zoom();
+	var mapLng=(x-mapXOFF-0.50000000*mapXSPAN)*0.00141335458*factor*Math.pow(2,(10-zoom))+1*ctr[1];
+	var mapLat=1*ctr[0]-(y-0.50000000*mapYSPAN)*yfactor*0.001255065*Math.pow(2,(10-zoom));
+	return [mapLat,mapLng];
+}
+function toLatLngArray(x,y){
+	x+=".000000";
+	y+=".000000";
+	var factor=canvas.factor;
+	var yfactor = canvas.yfactor;
+	var ctr=canvas.get_center();
+	var zoom=canvas.get_zoom();
+	var mapLng=(x-mapXOFF-0.50000000*mapXSPAN)*0.00141335458*1.25*factor*Math.pow(2,(10-zoom))+1*ctr[1];
+	var mapLat=1*ctr[0]-(y-0.50000000*mapYSPAN)*yfactor*0.001255065*1.25*Math.pow(2,(10-zoom));
+	return [mapLat,mapLng];
+}
+function measure(event){
+	isMedia=true;
+	if(!mesrTime){showInfo('Measure<br/><a href="#" onclick="measureLine(null)">x&rarr;x Distance (km)</a><br/><br/><a href="#" onclick="measureBox(null)">[] Area (km&#178;)</a>');}
+	else if(mesrTime=='line'){measureLine(event);}
+	else{measureBox(event);}
+}
+function measureLine(event){
+	$('iEnc').style.display="none";
+	if(!mMrkrs){
+		mMrkrs=[];
+		mesrTime="line";
+		$("mapCover").className="crosshairMap";
+		$("map").className="crosshairMap";
+	}
+	else{
+		if(!event){
+			mMrkrs = null;
+			mDist = 0;
+			$("mapCover").className = "-moz-grab";
+			$("map").className = "-moz-grab";
+			mesrTime = false;
+			canvas.setLineLayer(null);
+			return;
+		}
+		var measMark = toLatLng(event.clientX,event.clientY);
+		mMrkrs.push(measMark);
+		if(mMrkrs.length > 1){
+			mDist = (1*mDist) + 0.903*dist(measMark[0], measMark[1], mMrkrs[mMrkrs.length-2][0], mMrkrs[mMrkrs.length-2][1]);
+			isMedia=true;
+			showInfo("Measured "+mDist.toFixed(1)+" km<br/>= "+(0.622*mDist).toFixed(1)+" miles<br/><a href='#' onclick='measureLine()'>Done</a>");
+			var pts=[];
+			for(var m=0;m<mMrkrs.length;m++){pts.push(mMrkrs[m][0].toFixed(5)+","+mMrkrs[m][1].toFixed(5));}
+			canvas.setLineLayer(pts.join("|"));
+			canvas.updateImg();
+		}
+	}
+}
+function measureBox(event){
+	$('iEnc').style.display="none";
+	if(!mMrkrs){
+		mMrkrs=new Array();
+		mesrTime="box";
+		$("mapCover").className="crosshairMap";
+		$("map").className="crosshairMap";
+	}
+	else{
+		mMrkrs.push(toLatLng(event.clientX,event.clientY));
+		if(mMrkrs.length>1){
+			var mArea=dist(mMrkrs[1][0],mMrkrs[0][1],mMrkrs[0][0],mMrkrs[0][1]);
+			mArea*=dist(mMrkrs[1][0],mMrkrs[1][1],mMrkrs[1][0],mMrkrs[0][1]);
+			var mArea2=dist(mMrkrs[1][0],mMrkrs[1][1],mMrkrs[0][0],mMrkrs[1][1]);
+			mArea2*=dist(mMrkrs[0][0],mMrkrs[1][1],mMrkrs[0][0],mMrkrs[0][1]);
+			mArea=(mArea+mArea2)*0.45;
+			isMedia=true;
+			showInfo("Measured "+mArea.toFixed(1)+" km&#178; (sq.km)<br/>= "+(mArea*0.3869).toFixed(1)+" miles&#178;<br/><a href='#' onclick='closeiWin()'>Done</a>");
+			mesrTime=null;
+			$("mapCover").className = "-moz-grab";
+			$("map").className = "-moz-grab";
+			var pts = [mMrkrs[1][0].toFixed(5)+","+mMrkrs[1][1].toFixed(5)];
+			pts.push(mMrkrs[1][0].toFixed(5)+","+mMrkrs[0][1].toFixed(5));
+			pts.push(mMrkrs[0][0].toFixed(5)+","+mMrkrs[0][1].toFixed(5));
+			pts.push(mMrkrs[0][0].toFixed(5)+","+mMrkrs[1][1].toFixed(5));
+			pts.push(mMrkrs[1][0].toFixed(5)+","+mMrkrs[1][1].toFixed(5));
+			canvas.setLineLayer("fillcolor:0x0000ff|"+pts.join("|"));
+			mMrkrs=null;
+			canvas.updateImg();
+			canvas.setLineLayer(null);
+		}
+	}	
+}
+function pixel(latlng,bounds){
+	var center=canvas.get_center();
+	var latDiff=Math.abs(latlng[0]-center[0]);
+	var lngDiff=Math.abs(latlng[1]-center[1]);
+	var latSpan=Math.abs(bounds[0][0]-bounds[1][0]);
+	var lngSpan=Math.abs(bounds[0][1]-bounds[1][1]);
+	if((center[1]>0)&&(latlng[1]<0)){lngDiff=latlng[1]-(center[1]-360)}
+	if((latlng[1]>0)&&(center[1]<0)){lngDiff=center[1]-(latlng[1]-360)}
+	var yDiff=Math.round(latDiff/latSpan*mapYSPAN/1.1);
+	if(1*latlng[0]<1*center[0]){yDiff=mapYSPAN*0.500000+yDiff}
+	else{yDiff=mapYSPAN*0.50000000-yDiff}
+	var xDiff=Math.round(lngDiff/lngSpan*mapXSPAN/1.25);
+	if(1*latlng[1]>1*center[1]){xDiff=mapXSPAN*0.500000+xDiff+mapXOFF}
+	else{xDiff=mapXSPAN*0.50000000-xDiff+mapXOFF}
+	return [xDiff,yDiff];
+}
+function pixelprse(lat,lng){
+	var bounds=canvas.get_bounds();
+	var center=canvas.get_center();
+	var latDiff=Math.abs(lat-center[0]);
+	var lngDiff=Math.abs(lng-center[1]);
+	var latSpan=Math.abs(bounds[0][0]-bounds[1][0]);
+	var lngSpan=Math.abs(bounds[0][1]-bounds[1][1]);
+	if((center[1]>0)&&(lng<0)){lngDiff=lng-(center[1]-360)}
+	if((lng>0)&&(center[1]<0)){lngDiff=center[1]-(lng-360)}
+	var yDiff=Math.round(latDiff/latSpan*mapYSPAN/1.01);
+	if(1*lat<1*center[0]){yDiff=mapYSPAN*0.500000+yDiff}
+	else{yDiff=mapYSPAN*0.50000000-yDiff}
+	var xDiff=Math.round(lngDiff/lngSpan*mapXSPAN/1.01);
+	if(1*lng>1*center[1]){xDiff=mapXSPAN*0.500000+xDiff}
+	else{xDiff=mapXSPAN*0.50000000-xDiff}
+	return [xDiff,yDiff];
+}
+function dist(lat1,lon1,lat2,lon2){var R=6371;var dLat=toRad(lat2-lat1);var dLon=toRad(lon2-lon1);var a=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)*Math.sin(dLon/2); var c=2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a)); return R*c;}
+function toRad(deg){return deg/180*Math.PI;}
+function showInfo(er){
+	if(er==''){return;}
+	if(!isMedia){
+		if(er.indexOf("::") != -1){
+			if(er.indexOf('wiki::') != -1){ er = '<b>' + er.replace('wiki::','</b><iframe height="300" width="320" src="http://simple.m.wikipedia.org/wiki/') + '"></iframe>'; }
+			else if(er.indexOf('iframe::') != -1){ er = '<b>' + er.replace('iframe::','</b><iframe height="300" width="320" src="') + '"></iframe>'; }
+			else if(er.indexOf('img::') != -1){ er = '<b>' + er.replace('img::','</b><br/><img style="max-height:300;max-width:300;" src="') + '"/>'; }
+			else if(er.indexOf('pic::') != -1){ er = '<b>' + er.replace('pic::','</b><br/><img style="max-height:300;max-width:300;" src="') + '"/>'; }
+			else if(er.indexOf('google::') != -1){ er = er.replace('google::','<iframe height="300" width="320" src="http://google.com/search?q=') + '"></iframe>'; }
+			else if(er.indexOf('vid::') != -1){ er = '<b>' + er.replace('vid::','</b><br/><object width="300" height="300" type="application/ogg" data="') + '"></object>'; }
+			else if((er.indexOf('wiki') != -1)&&(er.indexOf('::') > er.indexOf('wiki'))){
+				var erBegin = er.substring(0,er.lastIndexOf('wiki'));
+				er = er.substring(er.lastIndexOf('wiki'));
+				var wikiCode = er.substring(4,er.indexOf('::'));
+				er = er.substring(er.indexOf('::') + 2);
+				er = '<b>' + erBegin + '</b><iframe height="300" width="320" src="http://' + wikiCode + '.m.wikipedia.org/wiki/' + er + '"></iframe>';
+			}
+		}
+		er+="<br/><input type='button' class='centerButton' value='" + editTxt + "' onclick='editInfoMarker(" + '"' + mID + '"' + ")'/>";
+	}
+	$("iWin").innerHTML = er;
+	$("iEnc").style.display = "block";
+	$("iWin").style.display = "block";
+}
+function showMedia(er){
+	mediaWin = $("iWin");
+	$("iWin").innerHTML = er;
+	$("iEnc").style.display = "block";
+	$("iWin").style.display = "block";
+}
+function closeiWin(){
+	if(mediaWin != null){
+		lhHideMedia();
+		mediaWin = null;
+	}
+	$("iWin").style.display = "none";
+	$("iEnc").style.display = "none";
+}
+function clickToZoom(event){hidePics();this.canvas.center=toLatLng(event.clientX,event.clientY);canvas.set_zoom(canvas.get_zoom()+1);updateLoc();}
+var cCtr = false;
+function clickingCenter(){
+	cCtr=true;
+	$("mapCover").className="crosshairMap";
+	$("map").className="crosshairMap";
+}
+function clkCtr(event){
+	canvas.set_center(toLatLng(event.clientX,event.clientY));
+	$("mapCover").className="-moz-grab";
+	$("map").className="-moz-grab";
+	cCtr=false;
+}
+function clkMar(event){
+	var bounds=canvas.get_bounds();
+	var mIndex=-1;
+	var minDist=12*mapYSPAN;
+	for(var m=0;m<canvas.markerList.length;m++){
+		var mark=canvas.markerList[m];
+		var pix=pixel(mark.getLatLng(),bounds);
+		var pDiff=Math.pow(Math.abs(pix[0] - event.clientX + 80),2) + Math.pow(Math.abs(pix[1] - event.clientY),2);
+		if(pDiff<minDist){
+			mIndex = mark.getMarkerId();
+			minDist = pDiff;
+		}
+	}
+	if(mIndex==-1){return;}
+	mID=mIndex;
+	if(mID.indexOf("info-") != 0){
+		isMedia=true;
+		infoImg(mID);
+	}
+	else{
+		isMedia=false;
+		showInfo(mrkWithId(mID).get_info());
+	}
+}
+function filterTags(sTerms){
+	var sTerms = unescape(sTerms).toLowerCase();
+	sTerms = replaceAll(sTerms," ","");
+	for(var m=0;m<canvas.markerList.length;m++){
+		var formattedInfo = replaceAll(canvas.markerList[m].info.toLowerCase()," ","");
+		if(formattedInfo.indexOf(sTerms) != -1){
+			closeiWin();
+			isMedia=false;
+			setMap2(canvas.markerList[m].pt[0],canvas.markerList[m].pt[1],canvas.zoom,canvas.markerList[m].info);
+			return;
+		}
+	}
+}
+function replaceAll(src,old,fix){
+	while(src.indexOf(old) != -1){
+		src = src.replace(old,fix);
+	}
+	return src;
+}
+function proyecto(){
+	showInfo('<h3>Proyecto <img src="Proyecto.png" style="vertical-align:middle;"/></h3><ol><li>Click Men&uacute; de Editar</li><li>Click el bot&oacute;n <img src="infoIcon.png" style="vertical-align:middle;width:30px;"/>, y click en el mapa</li><li><b>Escribir y creer con mapas</b></li><li>Si empieza con "NuestrosMapas" puede compartir mapas en el internet <img src="NuestrosMapas.png" style="vertical-align:middle;width:30px;"/></li></ol>');
+}
+</script>
+<style type="text/css">
+body{font-family:arial}
+#map{width:89%;height:98.8%;top:0px;left:11%;position:absolute}
+img.crosshairMap{cursor:crosshair}
+canvas.crosshairMap{cursor:crosshair}
+#go{position:absolute;bottom:30px;left:0px}
+#sidebar{position:absolute;top:0px;left:0px;width:11%;height:98%;border-top:1px solid #000;border-bottom:1px solid #000}
+div.maptype{-moz-border-radius:5px;background-color:silver;color:#000;border:1px solid #000;padding:3px;cursor:pointer}
+div.selectmaptype{-moz-border-radius:5px;background-color:#fff;color:#000;border:1px solid #000;padding:3px;font-weight:bold;cursor:pointer}
+#iEnc{position:absolute;left:90px;top:30px;-moz-border-radius:10px;border:2px solid #000;background:#fff;width:330px;padding:3px;padding-left:10px;display:none;z-index:10}
+input.cBtn{float:right}
+input:hover{color:#000;cursor:pointer}
+::-moz-selection{background:none;color:#fff}
+textarea{border:1px solid #000}
+div.ayuda a{color:#ff00ff;font-size:11pt}
+img.zoom{cursor:pointer;margin-left:24px;border:1px solid #fff}
+img.zoom:hover{border:1px solid #000}
+</style>
+</head>
+<body id="body" onload="load();">
+<!--<a id="toolbar-soas" href="#" style="float:right">Use Sugar on a Stick</a>-->
+<div id="sidebar">
+	<div id="roadmap" class="maptype" onclick="canvas.set_type('roadmap')">Map</div>
+	<div id="satellite" class="maptype" onclick="canvas.set_type('satellite')">Satellite</div>
+	<div id="hybrid" class="maptype" onclick="canvas.set_type('hybrid')">Hybrid</div>
+	<div id="terrain" class="maptype" onclick="canvas.set_type('terrain')">Terrain</div>
+	<div id="osm" class="maptype" onclick="canvas.set_type('osm')">OSM</div>
+	<span id="center">Center</span><br/><input type="button" onclick="clickingCenter()" value="(+)"/><br/><br/>
+	<span id="zoom">Zoom</span><br/>
+	<img src="zPlus.png" class="zoom" onclick="zoomIn()"/><br/><br/>
+	<img src="zMinus.png" class="zoom" onclick="zoomOut()"/><br/><br/>
+	<div id="ayuda" class="ayuda">
+		<a id="toolbar-en" href="#">Help</a>
+		<a id="toolbar-es" href="#">Gu&iacute;a</a>
+	</div>
+	<div id="special">
+	</div>
+</div>
+<img id="map" class="defaultMap" src="" alt="Connecting to Google Maps..." onclick="if(cCtr){clkCtr(event);}else if(mesrTime){measure(event);}else if(addingMedia){placeAddMedia(event);}else if(addingInfo){placeInfoMarker(event);}if(addingLines){placeVertex(event)}else{clkMar(event);}" ondblclick="clickToZoom(event)"/>
+<canvas id="mapCover" style="position:absolute;left:11%;top:0px;" width="640" height="404" onclick="if(cCtr){clkCtr(event);}else if(mesrTime){measure(event);}else if(addingMedia){placeAddMedia(event);}else if(addingInfo){placeInfoMarker(event);}if(addingLines){placeVertex(event)}else{clkMar(event);}" ondblclick="clickToZoom(event)"></canvas>
+<div id="iEnc"><input type="button" class="cBtn" onclick="closeiWin()" value="x"/><div id="iWin"></div></div>
+</body></html>

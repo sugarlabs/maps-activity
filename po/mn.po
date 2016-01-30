@@ -1,0 +1,99 @@
+#: activity/activity.info:2
+msgid "Map"
+msgstr "Газрын зураг"
+
+#: constants.py:26
+msgid "Edit"
+msgstr "хийх"
+
+#: constants.py:27
+msgid "Search"
+msgstr "хайлт"
+
+#: constants.py:28
+msgid "Find:"
+msgstr "олох:"
+
+#: constants.py:29
+msgid "Tags:"
+msgstr "--"
+
+#: constants.py:30
+msgid "Save Search"
+msgstr "хадгалах"
+
+#: constants.py:31
+msgid "Connecting to Map Server"
+msgstr "Connecting"
+
+#: constants.py:32
+msgid "Zoom In"
+msgstr "ойрхон"
+
+#: constants.py:33
+msgid "Zoom Out"
+msgstr "алс"
+
+#: constants.py:34
+msgid "Save"
+msgstr "хадгалах"
+
+#: constants.py:35
+msgid "Density"
+msgstr "Density"
+
+#: constants.py:36
+msgid "Saved Map"
+msgstr "газрын зураг"
+
+#: constants.py:37
+msgid "Describe Map"
+msgstr "тодорхойлох"
+
+#: constants.py:38
+msgid "Remove Map"
+msgstr "арилгах"
+
+#: constants.py:39
+msgid "Copy to Clipboard"
+msgstr "хувъ"
+
+#: constants.py:40
+msgid "Add Media"
+msgstr "фото нэмэх"
+
+#: constants.py:41
+msgid "Add Info"
+msgstr "бичих"
+
+#: constants.py:42
+msgid "Delete"
+msgstr "хадгалах"
+
+#: constants.py:43
+msgid "Library"
+msgstr "номын сан"
+
+#: constants.py:44
+msgid "Measure"
+msgstr "зай | орон зай"
+
+#: constants.py:45
+msgid "OurMaps"
+msgstr "хат газрын зураг"
+
+#: constants.py:46
+msgid "Latitude:"
+msgstr "широта:"
+
+#: constants.py:47
+msgid "Longitude:"
+msgstr "долгота:"
+
+#: constants.py:48
+msgid "Description:"
+msgstr "тодорхойлох:"
+
+#: constants.py:49
+msgid "lang=en"
+msgstr "lang=mn"

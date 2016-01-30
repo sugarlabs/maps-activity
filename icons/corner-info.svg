@@ -1,0 +1,15 @@
+<?xml version="1.0" ?><!DOCTYPE svg  PUBLIC '-//W3C//DTD SVG 1.1//EN'  'http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd' [
+	<!ENTITY stroke_color "#010101">
+	<!ENTITY fill_color "#CDCCCC">
+]><svg enable-background="new 0 0 75 75" height="75px" version="1.1" viewBox="0 0 75 75" width="75px" x="0px" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" y="0px"><g display="block" id="corner-info">
+	<g display="inline">
+		<rect height="75" width="75"/>
+		<g>
+			<polygon fill="&fill_color;" points="0,0 75,0 0,75    "/>
+		</g>
+		<g>
+			<path d="M22.34,35.03h2.534l-0.383,2.017h-8.436l3.051-15.704h-2.518l0.384-2.018h8.419L22.34,35.03z M19.923,14.308     c0.177-0.9,0.636-1.659,1.375-2.275c0.739-0.617,1.559-0.925,2.459-0.925c0.877,0,1.567,0.311,2.067,0.934     c0.367,0.456,0.55,0.99,0.55,1.601c0,0.21-0.022,0.433-0.066,0.667c-0.167,0.878-0.62,1.625-1.359,2.243     c-0.74,0.617-1.548,0.925-2.426,0.925c-0.9,0-1.6-0.306-2.101-0.917c-0.377-0.456-0.567-0.99-0.567-1.601     C19.856,14.747,19.879,14.53,19.923,14.308z"/>
+		</g>
+		<polyline fill="none" points="1,75 1,1 75,1   " stroke="#808080" stroke-width="2"/>
+	</g>
+</g></svg>

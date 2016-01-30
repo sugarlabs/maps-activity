@@ -1,0 +1,13 @@
+<?xml version="1.0" ?><!DOCTYPE svg  PUBLIC '-//W3C//DTD SVG 1.1//EN'  'http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd' [
+	<!ENTITY stroke_color "#010101">
+	<!ENTITY fill_color "#FFFFFF">
+]>
+
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 width="84.5px" height="28px" viewBox="0 0 84.5 28" enable-background="new 0 0 84.5 28" xml:space="preserve">
+
+<g>
+	<polygon fill="&fill_color;"  stroke="&stroke_color;" stroke-width="3.5" points="42.2,25.8 5.8,1.8 42.2,1.8 78.8,1.8 "/>
+	<polygon fill="&stroke_color;"  stroke="&stroke_color;" stroke-width="3.5" points="40.4,1.8 6.8,1.8 40.4,21.8 "/>
+</g>
+</svg>
