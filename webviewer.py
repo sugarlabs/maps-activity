@@ -1,6 +1,10 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+#
 # Copyright (C) 2006, Red Hat, Inc.
 # Copyright (C) 2007, One Laptop Per Child
 # Copyright (c) 2008, Media Modifications Ltd.
+# Copyright (c) 2016, Cristian García
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,105 +20,48 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-from sugar import env
+from sugar3 import env
 
 import logging
-import gobject
-import gtk
 import os
-import hulahop
-hulahop.startup(os.path.join(env.get_profile_path(), 'gecko'))
-import xpcom
-from xpcom.nsError import *
-from xpcom import components
-from xpcom.components import interfaces
-from hulahop.webview import WebView
 
-#import sessionstore
-#from dnd import DragDropHooks
+from gi.repository import Gtk
+from gi.repository import GObject
+from gi.repository import WebKit
 
-class WebViewer(WebView):
+
+class WebViewer(Gtk.ScrolledWindow):
+
     def __init__(self):
-        WebView.__init__(self)
+        Gtk.ScrolledWindow.__init__(self)
 
-        window_creator = WindowCreator(self)
-        cls = components.classes['@mozilla.org/embedcomp/window-watcher;1']
-        window_watcher = cls.getService(interfaces.nsIWindowWatcher)
-        window_watcher.setWindowCreator(window_creator)
+        self.browser = WebKit.WebView()
+        self.add(self.browser)
 
-        self.connect('realize', self._realize_cb)
+    def load_uri(self, uri):
+        self.browser.load_uri(uri)
 
-    def _realize_cb(self, widget):
-        #drag_drop_hooks = DragDropHooks(self)
 
-        cls = components.classes['@mozilla.org/embedcomp/command-params;1']
-        cmd_params = cls.createInstance('nsICommandParams')
-        #cmd_params.setISupportsValue('addhook', drag_drop_hooks)
+class _PopupCreator(GObject.GObject):
 
-        requestor = self.browser.queryInterface(interfaces.nsIInterfaceRequestor)
-        command_manager = requestor.getInterface(interfaces.nsICommandManager)
-        command_manager.doCommand('cmd_clipboardDragDropHook', cmd_params, self.dom_window)
-
-    def get_session(self):
-        return sessionstore.get_session(self)
-
-    def set_session(self, session_data):
-        return sessionstore.set_session(self, session_data)
-
-class WindowCreator:
-    _com_interfaces_ = interfaces.nsIWindowCreator
-
-    def __init__(self, browser):
-        self._popup_creators = []
-        self._browser = browser
-
-    def createChromeWindow(self, parent, chrome_flags):
-        logging.debug('createChromeWindow: %r %r' % (parent, chrome_flags))
-
-        popup_creator = _PopupCreator(self._browser.get_toplevel())
-        popup_creator.connect('popup-created', self._popup_created_cb)
-
-        self._popup_creators.append(popup_creator)
-
-        browser = popup_creator.get_embed()
-
-        if chrome_flags & interfaces.nsIWebBrowserChrome.CHROME_OPENAS_CHROME:
-            logging.debug('Creating chrome window.')
-            browser.is_chrome = True
-            item = browser.browser.queryInterface(interfaces.nsIDocShellTreeItem)
-            item.itemType = interfaces.nsIDocShellTreeItem.typeChromeWrapper
-        else:
-            logging.debug('Creating browser window.')
-            item = browser.browser.queryInterface(interfaces.nsIDocShellTreeItem)
-            item.itemType = interfaces.nsIDocShellTreeItem.typeContentWrapper
-
-        browser.realize()
-
-        return browser.browser.containerWindow
-
-    def _popup_created_cb(self, creator):
-        self._popup_creators.remove(creator)
-
-class _PopupCreator(gobject.GObject):
     __gsignals__ = {
-        'popup-created':  (gobject.SIGNAL_RUN_FIRST,
-                           gobject.TYPE_NONE, ([])),
+        'popup-created':  (GObject.SIGNAL_RUN_FIRST, GObject.TYPE_NONE, ([]))
     }
 
     def __init__(self, parent_window):
-        gobject.GObject.__init__(self)
+        GObject.GObject.__init__(self)
 
         logging.debug('Creating the popup widget')
 
         self._parent_window = parent_window
 
-        self._dialog = gtk.Window()
+        self._dialog = Gtk.Window()
         self._dialog.set_resizable(True)
 
         self._dialog.realize()
-        self._dialog.window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_DIALOG)
+        self._dialog.window.set_type_hint(Gdk.WindowTypeHint.DIALOG)
 
-        self._embed = Browser()
+        self._embed = Browser()  ## Where it's from?
         self._vis_sid = self._embed.connect('notify::visible', self._notify_visible_cb)
         self._dialog.add(self._embed)
 
@@ -126,6 +73,7 @@ class _PopupCreator(gobject.GObject):
             self._embed.show()
             self._dialog.set_transient_for(self._parent_window)
             self._dialog.show()
+
         else:
             logging.debug('Open a new activity for the popup')
             self._dialog.remove(self._embed)
@@ -136,8 +84,8 @@ class _PopupCreator(gobject.GObject):
             # It seem like a pretty special case though, I doubt
             # other activities will need something similar.
             from webactivity import WebActivity
-            from sugar.activity import activityfactory
-            from sugar.activity.activityhandle import ActivityHandle
+            from sugar3.activity import activityfactory
+            from sugar3.activity.activityhandle import ActivityHandle
             handle = ActivityHandle(activityfactory.create_activity_id())
             activity = WebActivity(handle, self._embed)
             activity.show()
@@ -146,3 +94,4 @@ class _PopupCreator(gobject.GObject):
 
     def get_embed(self):
         return self._embed
+

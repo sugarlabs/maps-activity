@@ -1,131 +1,157 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+#
+# Copyright (c) 2016, Cristian García.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+
 import os
-import gtk
 from gettext import gettext as _
 
-import sugar.graphics.style
-from sugar.activity import activity
-from sugar import profile
+from gi.repository import Gtk
+
+import sugar3.graphics.style
+from sugar3.activity import activity
+from sugar3 import profile
 
 from instance import Instance
 from color import Color
 import utils
 
+
 class Constants:
 
-	VERSION = 8
+    VERSION = 8
 
-	SERVICE = "org.laptop.Map"
-	IFACE = SERVICE
-	PATH = "/org/laptop/Map"
-	activityId = None
+    SERVICE = "org.laptop.Map"
+    IFACE = SERVICE
+    PATH = "/org/laptop/Map"
+    activityId = None
 
-	gfxPath = os.path.join(activity.get_bundle_path(), "gfx")
-	htmlPath = os.path.join(activity.get_bundle_path(), "html")
-	iconsPath = os.path.join(activity.get_bundle_path(), "icons")
+    gfx_path = os.path.join(activity.get_bundle_path(), "gfx")
+    html_path = os.path.join(activity.get_bundle_path(), "html")
+    icons_path = os.path.join(activity.get_bundle_path(), "icons")
 
-	istrAnnotate = _("Edit")
-	istrSearch = _("Search")
-	istrSearchAddress = _('Find:')
-	istrSearchMedia = _("Tags:")
-	istrSaveSearch = _("Save Search")
-	istrConnecting = _("Connecting to Map Server")
-	istrZoomIn = _("Zoom In")
-	istrZoomOut = _("Zoom Out")
-	istrSaveSearch = _("Save")
-	istrDensity = _("Density")
-	istrSavedMap = _("Saved Map")
-	istrTagMap = _("Describe Map")
-	istrRemove = _("Remove Map")
-	istrCopyToClipboard = _("Copy to Clipboard")
-	istrAddMedia = _("Add Media")
-	istrAddInfo = _("Add Info")
-	istrDeleteMedia = _("Delete")
-	istrWebMedia = _("Library")
-	istrMeasure = _("Measure")
-	istrStaticMaps = _("olpcMAP.net")
-	istrPanoramio = _("Panoramio")
-	istrLocalWiki = _("LocationWiki")
-	istrWikiMapia = _("WikiMapia")
-	istrLatitude = _("Latitude:")
-	istrLongitude = _("Longitude:")
-	istrTags = _("Description:")
-	istrLang = _("lang=en")
-	LineButton = _("Add Line")
-	PolyButton = _("Add Shape")
+    istr_annotate = _("Edit")
+    istr_search = _("Search")
+    istr_search_address = _('Find:')
+    istr_search_media = _("Tags:")
+    istr_save_search = _("Save Search")
+    istr_connecting = _("Connecting to Map Server")
+    istr_zoom_in = _("Zoom In")
+    istr_zoom_out = _("Zoom Out")
+    istr_save_search = _("Save")
+    istr_density = _("Density")
+    istr_saved_map = _("Saved Map")
+    istr_tag_map = _("Describe Map")
+    istr_remove = _("Remove Map")
+    istr_copy_to_clipboard = _("Copy to Clipboard")
+    istr_add_media = _("Add Media")
+    istr_add_info = _("Add Info")
+    istr_delete_media = _("Delete")
+    istr_web_media = _("Library")
+    istr_measure = _("Measure")
+    istr_static_maps = _("olpcMAP.net")
+    istr_panoramio = _("Panoramio")
+    istr_local_wiki = _("LocationWiki")
+    istr_wiki_mapia = _("WikiMapia")
+    istr_latitude = _("Latitude:")
+    istr_longitude = _("Longitude:")
+    istr_tags = _("Description:")
+    istr_lang = _("lang=en")
+    line_button = _("Add Line")
+    poly_button = _("Add Shape")
 
-	TYPE_PHOTO = 0
-	TYPE_VIDEO = 1
+    TYPE_PHOTO = 0
+    TYPE_VIDEO = 1
 
-	ui_dim_INSET = 4
+    ui_dim_INSET = 4
 
-	recdAlbum = "map"
-	recdLat = "lat"
-	recdLng = "lng"
-	recdDatastoreId = "datastore"
-	recdInfo = "info"
-	recdMapItem = "mapItem"
-	recdSavedMapItem = "savedMap"
-	recdInfoMarker = "infoMarker"
-	recdIcon = "icon"
-	recdZoom = "zoom"
-	recdNotes = "notes"
-	recdMapImg = "mapImg"
-	recdTags = "tags"
-	recdMapThumbImg = "mapThumbImg"
-	recdRecdId = "recdId"
-	recdRecdLat = "recdLat"
-	recdRecdLng = "recdLng"
-	recdDensity = "density"
-	recdLine = "line"
-	lineID = "lid"
-	lineColor = "lcolor"
-	lineThick = "lthickness"
-	linePts = "lpts"
-	mapLat="lat"
-	mapLng="lng"
-	mapZoom="zoom"
+    recd_album = "map"
+    recd_lat = "lat"
+    recd_lng = "lng"
+    recd_datastore_id = "datastore"
+    recd_info = "info"
+    recd_map_item = "mapItem"
+    recd_saved_map_item = "savedMap"
+    recd_info_marker = "infoMarker"
+    recd_icon = "icon"
+    recd_zoom = "zoom"
+    recd_notes = "notes"
+    recd_map_img = "mapImg"
+    recd_tags = "tags"
+    recd_map_thumb_img = "mapThumbImg"
+    recd_recd_id = "recdId"
+    recd_recd_lat = "recdLat"
+    recd_recd_lng = "recdLng"
+    recd_density = "density"
+    recd_line = "line"
+    line_id = "lid"
+    line_color = "lcolor"
+    line_thick = "lthickness"
+    line_pts = "lpts"
+    map_lat = "lat"
+    map_lng = "lng"
+    map_zoom = "zoom"
 
-	colorBlack = Color()
-	colorBlack.init_rgba( 0, 0, 0, 255 )
-	colorWhite = Color()
-	colorWhite.init_rgba( 255, 255, 255, 255 )
-	colorRed = Color()
-	colorRed.init_rgba( 255, 0, 0, 255)
-	colorGreen = Color()
-	colorGreen.init_rgba( 0, 255, 0, 255)
-	colorBlue = Color()
-	colorBlue.init_rgba( 0, 0, 255, 255)
-	colorGrey = Color()
-	colorGrey.init_gdk( sugar.graphics.style.COLOR_BUTTON_GREY )
-	colorBg = colorBlack
+    color_black = Color()
+    color_black.init_rgba(0, 0, 0, 255)
 
-	def __init__( self, ca ):
-		self.__class__.activityId = ca._activity_id
-		self.__class__.northImgClr, self.__class__.northImgBw = self.loadSvgImg('map-icon-croseN.svg')
-		self.__class__.southImgClr, self.__class__.southImgBw = self.loadSvgImg('map-icon-croseS.svg')
-		self.__class__.eastImgClr, self.__class__.eastImgBw = self.loadSvgImg('map-icon-croseE.svg')
-		self.__class__.westImgClr, self.__class__.westImgBw = self.loadSvgImg('map-icon-croseW.svg')
+    color_white = Color()
+    color_white.init_rgba(255, 255, 255, 255)
 
-		infoOnSvgPath = os.path.join(self.__class__.iconsPath, 'corner-info.svg')
-		infoOnSvgFile = open(infoOnSvgPath, 'r')
-		infoOnSvgData = infoOnSvgFile.read()
-		self.__class__.infoOnSvg = utils.loadSvg(infoOnSvgData, None, None )
-		infoOnSvgFile.close()
+    color_red = Color()
+    color_red.init_rgba(255, 0, 0, 255)
 
-	def loadSvgImg(self, fileName):
-		SvgPath = os.path.join(self.__class__.iconsPath, fileName)
-		SvgFile = open(SvgPath, 'r')
-		SvgData = SvgFile.read()
-		SvgFile.close()
+    color_green = Color()
+    color_green.init_rgba(0, 255, 0, 255)
 
-		ColorSvg = utils.loadSvg(SvgData, Instance.colorStroke.hex, Instance.colorFill.hex)
-		ColorPixBuf = ColorSvg.get_pixbuf()
-		ColorImg = gtk.Image()
-		ColorImg.set_from_pixbuf(ColorPixBuf)
+    color_blue = Color()
+    color_blue.init_rgba(0, 0, 255, 255)
 
-		MonoSvg = utils.loadSvg(SvgData, self.__class__.colorGrey.hex, self.__class__.colorWhite.hex)
-		MonoPixBuf = MonoSvg.get_pixbuf()
-		MonoImg = gtk.Image()
-		MonoImg.set_from_pixbuf(MonoPixBuf)
+    color_grey = Color()
+    color_grey.init_gdk(sugar3.graphics.style.COLOR_BUTTON_GREY)
+    color_bg = color_black
 
-		return [ColorImg, MonoImg]
+    def __init__(self, ca):
+        self.activity_id = ca._activity_id
+        self.north_img_clr, self.north_img_bw = self.load_svg_img('map-icon-croseN.svg')
+        self.south_img_clr, self.south_img_bw = self.load_svg_img('map-icon-croseS.svg')
+        self.east_omg_clr, self.east_img_bw = self.load_svg_img('map-icon-croseE.svg')
+        self.west_img_clr, self.west_img_bw = self.load_svg_img('map-icon-croseW.svg')
+
+        info_on_svg_path = os.path.join(self.__class__.icons_path, 'corner-info.svg')
+        info_on_svg_file = open(info_on_svg_path, 'r')
+        info_on_svg_data = info_on_svg_file.read()
+        self.__class__.info_on_svg = utils.load_svg(info_on_svg_data, None, None)
+        info_on_svg_file.close()
+
+    def load_svg_img(self, fileName):
+        svg_path = os.path.join(self.__class__.icons_path, fileName)
+        svg_file = open(svg_path, 'r')
+        svg_data = svg_file.read()
+        svg_file.close()
+
+        color_svg = utils.load_svg(svg_data, Instance.color_stroke.hex, Instance.color_fill.hex)
+        color_pixbuf = color_svg.get_pixbuf()
+        color_img = Gtk.Image.new_from_pixbuf(color_pixbuf)
+
+        mono_svg = utils.load_svg(svg_data, self.__class__.color_grey.hex, self.__class__.color_white.hex)
+        mono_pixbuf = mono_svg.get_pixbuf()
+        mono_img = Gtk.Image()
+        mono_img.set_from_pixbuf(mono_pixbuf)
+
+        return [color_img, mono_img]
+

@@ -1,9 +1,8 @@
 [Activity]
 name = Map
-activity_version = 13
-host_version = 1
-license = MIT
+activity_version = 14
+license = GPLv3
+bundle_id = org.sugarlabs.Map
+exec = sugar-activity map.Map
 icon = activity-map
-service_name = org.laptop.map
-class = map.Map
-show_launcher = 1
+show_launcher = yes

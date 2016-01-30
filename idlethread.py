@@ -1,8 +1,29 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+#
+# Copyright (c) 2016, Cristian García.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+
 from __future__ import generators
 
-import gobject
+from gi.repository import GObject
+
 import time
 import traceback
+
 
 class GIdleThread(object):
     """This is a pseudo-"thread" for use with the GTK+ main loop.
@@ -36,12 +57,11 @@ class GIdleThread(object):
         self._idle_id = 0
         self._error = None
 
-    def start(self, priority=gobject.PRIORITY_LOW):
+    def start(self, priority=GObject.PRIORITY_LOW):
         """Start the generator. Default priority is low, so screen updates
         will be allowed to happen.
         """
-        idle_id = gobject.idle_add(self.__generator_executer,
-                                   priority=priority)
+        idle_id = GObject.idle_add(self.__generator_executer, priority=priority)
         self._idle_id = idle_id
         return idle_id
 
@@ -51,7 +71,7 @@ class GIdleThread(object):
         """
         clock = time.clock
         start_time = clock()
-        main = gobject.main_context_default()
+        main = GObject.main_context_default()
         while self.is_alive():
             main.iteration(False)
             if timeout and (clock() - start_time >= timeout):
@@ -61,7 +81,7 @@ class GIdleThread(object):
         """Force the generator to stop running.
         """
         if self.is_alive():
-            gobject.source_remove(self._idle_id)
+            GObject.source_remove(self._idle_id)
             self._idle_id = 0
 
     def is_alive(self):
@@ -159,7 +179,7 @@ if __name__ == '__main__':
     c = GIdleThread(counter(23), queue)
     s = GIdleThread(shower(queue))
 
-    main = gobject.main_context_default()
+    main = GObject.main_context_default()
     c.start()
     s.start()
     s.wait(2)
@@ -169,7 +189,8 @@ if __name__ == '__main__':
     c = GIdleThread(counter(23), queue)
     s = GIdleThread(shower(queue))
 
-    main = gobject.main_context_default()
-    c.start(priority=gobject.PRIORITY_DEFAULT)
+    main = GObject.main_context_default()
+    c.start(priority=GObject.PRIORITY_DEFAULT)
     s.start()
     s.wait(3)
+

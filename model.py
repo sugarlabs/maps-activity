@@ -25,12 +25,15 @@ from instance import Instance
 import utils
 from recorded import Recorded
 
-import gtk
 import os
 import shutil
 import StringIO
 
+from gi.repository import GdkPixbuf
+
+
 class Model:
+
 	def __init__(self, ca):
 		self.ca = ca
 
@@ -87,7 +90,7 @@ class Model:
 			try:
 				thumb = datastoreOb.metadata['preview']
 				if thumb[1:4] == 'PNG':
-					pbl = gtk.gdk.PixbufLoader()
+					pbl = GdkPixbuf.PixbufLoader()
 					pbl.write(thumb)
 					pbl.close()
 					thumbPixbuf = pbl.get_pixbuf()
@@ -101,14 +104,14 @@ class Model:
 			if (rec.type == Constants.TYPE_PHOTO):
 				try:
 					#load in the image, make a thumbnail
-					thumbPixbuf = gtk.gdk.pixbuf_new_from_file_at_size(rec.getFilepath(), 320, 240)
+					thumbPixbuf = GdkPixbuf.Pixbuf.new_from_file_at_size(rec.getFilepath(), 320, 240)
 				except:
 					pass
 
 		if (thumbPixbuf == None):
 			#i give up.  load in a blank image from the activity itself.
 			thumbPath = os.path.join(self.ca.htmlPath, "1.jpg")
-			thumbPixbuf = gtk.gdk.pixbuf_new_from_file(thumbPath)
+			thumbPixbuf = GdkPixbuf.Pixbuf.new_from_file(thumbPath)
 
 
 		thumbFilepath = os.path.join(Instance.instancePath, "thumb.png")

@@ -16,10 +16,5 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-from sugar.activity import bundlebuilder
-
-import os
-
-os.system("make")
-
-bundlebuilder.start("map")
+from sugar3.activity import bundlebuilder
+bundlebuilder.start()

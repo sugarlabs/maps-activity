@@ -1,86 +1,84 @@
-# Copyright (c) 2008, Media Modifications Ltd.
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+#
+# Copyright (c) 2016, Cristian García.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-#Permission is hereby granted, free of charge, to any person obtaining a copy
-#of this software and associated documentation files (the "Software"), to deal
-#in the Software without restriction, including without limitation the rights
-#to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-#copies of the Software, and to permit persons to whom the Software is
-#furnished to do so, subject to the following conditions:
-
-#The above copyright notice and this permission notice shall be included in
-#all copies or substantial portions of the Software.
-
-#THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-#IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-#FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-#AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-#LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-#OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-#THE SOFTWARE.
-
-import gtk
-from gtk import gdk
-import gobject
-import cairo
-import math
+from gi.repository import Gtk
+from gi.repository import Gdk
 
 
-class P5(gtk.DrawingArea):
-	def __init__(self, button=False):
-		super(P5, self).__init__()
-		self.connect("expose_event", self.expose)
-		if (button):
-			self.add_events(gdk.BUTTON_PRESS_MASK | gdk.BUTTON_RELEASE_MASK | gdk.POINTER_MOTION_MASK)
-			self.connect("button_press_event", self._buttonPress)
+class P5(Gtk.DrawingArea):
 
+    def __init__(self, button=False):
+        Gtk.DrawingArea.__init__(self)
 
-	def expose(self, widget, event):
-		ctx = widget.window.cairo_create()
+        self.connect("draw", self.draw_cb)
 
-		# set a clip region for the expose event
-		ctx.rectangle(event.area.x, event.area.y, event.area.width, event.area.height)
-		ctx.clip()
+        if (button):
+            self.add_events(Gdk.EventMask.BUTTON_PRESS_MASK |
+                            Gdk.EventMask.BUTTON_RELEASE_MASK |
+                            Gdk.EventMask.POINTER_MOTION_MASK)
 
-		rect = widget.allocation
-		self.draw( ctx, rect.width, rect.height )
+            self.connect("button-press_event", self._button_press)
 
+    def draw_cb(self, widget, ctx):
+        rect = self.get_allocation()
 
-	def redraw_canvas(self):
-		#called from update
-		if self.window:
-			alloc = self.get_allocation()
-			self.queue_draw_area(0, 0, alloc.width, alloc.height)
-			self.window.process_updates(True)
+        # set a clip region for the expose event
+        ctx.rectangle(0, 0, rect.width, rect.height)
+        ctx.clip()
 
+        self.redraw(ctx, rect.width, rect.height)
 
-	def update(self):
-		#paint thread -- call redraw_canvas, which calls expose
-		self.redraw_canvas()
+    def redraw_canvas(self):
+        #called from update
+        if self.get_window():
+            alloc = self.get_allocation()
+            self.queue_draw_area(0, 0, alloc.width, alloc.height)
 
+    def redraw(self, ctx, width, height):
+        self.queue_draw_area(0, 0, width, height)
 
-	def fillRect( self, ctx, col, w, h ):
-		self.setColor( ctx, col )
+    def update(self):
+        #paint thread -- call redraw_canvas, which calls expose
+        self.redraw_canvas()
 
-		ctx.line_to(0, 0)
-		ctx.line_to(w, 0)
-		ctx.line_to(w, h)
-		ctx.line_to(0, h)
-		ctx.close_path()
+    def fill_rect(self, ctx, col, w, h):
+        self.set_color(ctx, col)
 
-		ctx.fill()
+        ctx.line_to(0, 0)
+        ctx.line_to(w, 0)
+        ctx.line_to(w, h)
+        ctx.line_to(0, h)
+        ctx.close_path()
 
+        ctx.fill()
 
-	def setColor( self, ctx, col ):
-		if (not col._opaque):
-			ctx.set_source_rgba( col._r, col._g, col._b, col._a )
-		else:
-			ctx.set_source_rgb( col._r, col._g, col._b )
+    def set_color(self, ctx, col):
+        if not col._opaque:
+            ctx.set_source_rgba(col._r, col._g, col._b, col._a)
 
+        else:
+            ctx.set_source_rgb(col._r, col._g, col._b)
 
-	def _buttonPress(self, widget, event):
-		self.fireButton()
+    def _button_press(self, widget, event):
+        self.fire_button()
 
+    def fire_button(self):
+        #for extending
+        pass
 
-	def fireButton( self ):
-		#for extending
-		pass

@@ -1,154 +1,149 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+#
 # Copyright (c) 2008, Media Modifications Ltd.
-
-#Permission is hereby granted, free of charge, to any person obtaining a copy
-#of this software and associated documentation files (the "Software"), to deal
-#in the Software without restriction, including without limitation the rights
-#to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-#copies of the Software, and to permit persons to whom the Software is
-#furnished to do so, subject to the following conditions:
-
-#The above copyright notice and this permission notice shall be included in
-#all copies or substantial portions of the Software.
-
-#THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-#IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-#FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-#AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-#LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-#OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-#THE SOFTWARE.
+# Copyright (c) 2016, Cristian García.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #look at jukeboxactivity.py
 
-import gtk
-import pygtk
-pygtk.require('2.0')
+from gi.repository import Gtk
+from gi.repository import Gst
+from gi.repository import GObject
+
+from gi.repository import Gdk
+from gi.repository import GdkX11
+
 import sys
-import pygst
-pygst.require('0.10')
-import gst
-import gst.interfaces
-import gobject
 import time
-gobject.threads_init()
+
+GObject.threads_init()
+Gst.init([])
+
 
 class Gplay:
 
-	def __init__(self):
-		self.window = None
-		self.players = []
-		self.playing = False
-		self.nextMovie()
+    def __init__(self):
+        self.window = None
+        self.players = []
+        self.playing = False
+        self.next_movie()
 
-	def nextMovie(self):
-		if ( len(self.players) > 0 ):
-			self.playing = False
-			self.getPlayer().set_property("video-sink", None)
-			self.getPlayer().get_bus().disconnect(self.SYNC_ID)
-			self.getPlayer().get_bus().remove_signal_watch()
-			self.getPlayer().get_bus().disable_sync_message_emission()
+    def next_movie(self):
+        if len(self.players) > 0:
+            self.playing = False
+            self.get_player().set_property("video-sink", None)
+            self.get_player().get_bus().disconnect(self.SYNC_ID)
+            self.get_player().get_bus().remove_signal_watch()
+            self.get_player().get_bus().disable_sync_message_emission()
 
-		player = gst.element_factory_make("playbin", "playbin")
-		xis = gst.element_factory_make("xvimagesink", "xvimagesink")
-		player.set_property("video-sink", xis)
-		bus = player.get_bus()
-		bus.enable_sync_message_emission()
-		bus.add_signal_watch()
-		self.SYNC_ID = bus.connect('sync-message::element', self.onSyncMessage)
-		self.players.append(player)
+        player = Gst.ElementFactory.make("playbin", "playbin")
+        xis = Gst.ElementFactory.make("xvimagesink", "xvimagesink")
+        player.set_property("video-sink", xis)
+        bus = player.get_bus()
+        bus.enable_sync_message_emission()
+        bus.add_signal_watch()
+        self.SYNC_ID = bus.connect('sync-message::element', self.on_sync_message)
+        self.players.append(player)
 
+    def get_player(self):
+        return self.players[len(self.players)-1]
 
-	def getPlayer(self):
-		return self.players[len(self.players)-1]
+    def on_sync_message(self, bus, message):
+        if message.structure is None:
+            return True
 
+        if message.structure.get_name() == 'prepare-xwindow-id':
+            self.window.set_sink(message.src)
+            message.src.set_property('force-aspect-ratio', True)
+            return True
 
-	def onSyncMessage(self, bus, message):
-		if message.structure is None:
-			return True
-		if message.structure.get_name() == 'prepare-xwindow-id':
-			self.window.set_sink(message.src)
-			message.src.set_property('force-aspect-ratio', True)
-			return True
+    def set_location(self, location):
+        print("set_location: ", location)
+        if (self.getPlayer().get_property('uri') == location):
+            self.seek(gst.SECOND*0)
+            return
 
+        self.get_player().set_state(Gst.State.READY)
+        self.get_player().set_property('uri', location)
 
-	def setLocation(self, location):
-		print("setLocation: ", location )
-		if (self.getPlayer().get_property('uri') == location):
-			self.seek(gst.SECOND*0)
-			return
+        ext = location[len(location)-3:]
+        if (ext == "jpg"):
+            self.pause()
 
-		self.getPlayer().set_state(gst.STATE_READY)
-		self.getPlayer().set_property('uri', location)
-		ext = location[len(location)-3:]
-		if (ext == "jpg"):
-			self.pause()
-		print("all played?")
+        print("all played?")
 
+    def query_position(self):
+        "Returns a (position, duration) tuple"
+        try:
+            position, format = self.get_player().query_position(Gst.Format.TIME)
+        except:
+            position = Gst.CLOCK_TIME_NONE
 
-	def queryPosition(self):
-		"Returns a (position, duration) tuple"
-		try:
-			position, format = self.getPlayer().query_position(gst.FORMAT_TIME)
-		except:
-			position = gst.CLOCK_TIME_NONE
+        try:
+            duration, format = self.getPlayer().query_duration(Gst.Format.TIME)
+        except:
+            duration = Gst.CLOCK_TIME_NONE
 
-		try:
-			duration, format = self.getPlayer().query_duration(gst.FORMAT_TIME)
-		except:
-			duration = gst.CLOCK_TIME_NONE
+        return (position, duration)
 
-		return (position, duration)
+    def seek(self, location):
+        event = Gst.Event.new_seek(1.0, Gst.Format.TIME, Gst.SeekFlags.FLUSH | Gst.SeekFlags.ACCURATE, Gst.SeekType.SET, location, Gst.SeekType.NONE, 0)
+        res = self.get_player().send_event(event)
+        if res:
+            self.get_player().set_new_stream_time(0L)
 
+    def pause(self):
+        self.playing = False
+        self.get_player().set_state(Gst.State.PAUSED)
 
-	def seek(self, location):
-		event = gst.event_new_seek(1.0, gst.FORMAT_TIME, gst.SEEK_FLAG_FLUSH | gst.SEEK_FLAG_ACCURATE, gst.SEEK_TYPE_SET, location, gst.SEEK_TYPE_NONE, 0)
-		res = self.getPlayer().send_event(event)
-		if res:
-			self.getPlayer().set_new_stream_time(0L)
+    def play(self):
+        self.playing = True
+        self.get_player().set_state(Gst.State.PLAYING)
 
+    def stop(self):
+        self.playing = False
+        self.get_player().set_state(Gst.State.NULL)
+        self.next_movie()
 
-	def pause(self):
-		self.playing = False
-		self.getPlayer().set_state(gst.STATE_PAUSED)
+    def get_state(self, timeout=1):
+        return self.get_player().get_state(timeout=timeout)
 
-
-	def play(self):
-		self.playing = True
-		self.getPlayer().set_state(gst.STATE_PLAYING)
-
-
-	def stop(self):
-		self.playing = False
-		self.getPlayer().set_state(gst.STATE_NULL)
-		self.nextMovie()
-
-
-	def get_state(self, timeout=1):
-		return self.getPlayer().get_state(timeout=timeout)
+    def is_playing(self):
+        return self.playing
 
 
-	def is_playing(self):
-		return self.playing
+class PlayVideoWindow(Gtk.EventBox):
 
+    def __init__(self, bgd):
+        Gtk.EventBox.__init__(self)
 
+        self.imagesink = None
 
-class PlayVideoWindow(gtk.EventBox):
-	def __init__(self, bgd):
-		gtk.EventBox.__init__(self)
+        self.modify_bg(Gtk.StateType.NORMAL, bgd)
+        self.modify_bg(Gtk.StateType.INSENSITIVE, bgd)
+        self.set_double_buffered(False)
+        self.set_app_paintable(True)
 
-		self.imagesink = None
+    def set_sink(self, sink):
+        if self.imagesink != None:
+            assert self.get_window().xid
+            self.imagesink = None
+            del self.imagesink
 
-		self.modify_bg( gtk.STATE_NORMAL, bgd )
-		self.modify_bg( gtk.STATE_INSENSITIVE, bgd )
-		self.unset_flags(gtk.DOUBLE_BUFFERED)
-		self.set_flags(gtk.APP_PAINTABLE)
+        self.imagesink = sink
+        self.imagesink.set_xwindow_id(self.window.xid)
 
-
-	def set_sink(self, sink):
-		if (self.imagesink != None):
-			assert self.window.xid
-			self.imagesink = None
-			del self.imagesink
-
-		self.imagesink = sink
-		self.imagesink.set_xwindow_id(self.window.xid)
