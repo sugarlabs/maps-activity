@@ -35,6 +35,8 @@ from sugar3.graphics.toolbarbox import ToolbarBox
 from sugar3.graphics.toolbarbox import ToolbarButton
 from sugar3.graphics.toggletoolbutton import ToggleToolButton
 from sugar3.graphics.toolbutton import ToolButton
+from sugar3.activity.widgets import StopButton
+from sugar3.activity.widgets import ActivityToolbarButton
 from sugar3.activity import activity
 from sugar3.graphics import style
 
@@ -125,6 +127,16 @@ class Map(activity.Activity):
 
         self.toolbarbox = ToolbarBox()
         self.set_toolbar_box(self.toolbarbox)
+
+        self.toolbarbox.toolbar.insert(ActivityToolbarButton(self), -1)
+        self.toolbarbox.toolbar.insert(Gtk.SeparatorToolItem(), -1)
+        self.toolbarbox.toolbar.insert(StopButton(self), -1)
+
+        sep = Gtk.SeparatorToolItem()
+        sep.props.draw = False
+        sep.set_expand(True)
+        self.toolbarbox.toolbar.insert(sep, 2)
+
         self.searchToolbar = SearchToolbar(self)
         self.searchToolbar.connect("address-update", self._addressUpdateCb)
         self.searchToolbar.connect("zoom-in", self._zoomInCb)
@@ -132,9 +144,9 @@ class Map(activity.Activity):
         self.searchToolbar.connect("save-search", self._saveSearchCb)
         self.searchToolbar.connect("search-update", self._searchUpdateCb)
         self.searchToolbar.set_sensitive(False)
-        self.toolbarbox.toolbar.insert(ToolbarButton(page=self.searchToolbar, icon_name='toolbar-view'), -1)
+        self.toolbarbox.toolbar.insert(ToolbarButton(page=self.searchToolbar, icon_name='edit-find'), 2)
         self.addToolbar = AddToolbar(self)
-        self.toolbarbox.toolbar.insert(ToolbarButton(page=self.addToolbar, icon_name='toolbar-view'), -1)
+        self.toolbarbox.toolbar.insert(ToolbarButton(page=self.addToolbar, icon_name='list-add'), 3)
         self.addToolbar.connect("add-media", self._addMediaCb)
         self.addToolbar.connect("add-kml", self._addKMLCb)
         self.addToolbar.connect("add-info", self._addInfoCb)
@@ -146,7 +158,7 @@ class Map(activity.Activity):
         self.addToolbar.connect("wikimapia",self._wikimapiaCb)
         self.addToolbar.set_sensitive(False)
         self.firstSearch = True
-
+        self.addToolbar.show_all()
         #add components
         vbox = Gtk.VBox()
 
