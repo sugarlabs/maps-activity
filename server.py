@@ -32,7 +32,7 @@ class Server(BaseHTTPServer.HTTPServer):
         self.logic = logic
 
 
-#RegHandler extends SimpleHTTPServer.py (in python 2.4)
+# RegHandler extends SimpleHTTPServer.py (in python 2.4)
 class RegHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
     def do_POST(self):
@@ -45,7 +45,7 @@ class RegHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         self.translate_path()
 
     def translate_path(self):
-        #todo: compare with send_head in parent
+        # todo: compare with send_head in parent
         urlp = urlparse.urlparse(self.path)
 
         urls = urlp[2]
@@ -56,15 +56,14 @@ class RegHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         params = urlp[4]
         parama = []
         all_params = params.split('&')
-        for i in range (0, len(all_params)):
+        for i in range(0, len(all_params)):
             parama.append(all_params[i].split('='))
 
         result = self.server.logic.do_server_logic(self.path, url_path, parama)
         self.send_response(200)
 
-        for i in range (0, len(result.headers)):
+        for i in range(0, len(result.headers)):
             self.send_header(result.headers[i][0], result.headers[i][1])
 
         self.end_headers()
         self.wfile.write(result.txt)
-

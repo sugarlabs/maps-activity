@@ -17,6 +17,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
+
 class SavedMap:
 
     def __init__(self, lat, lng, zoom, img_file, thumb_file, notes, tags):
@@ -38,4 +39,3 @@ class SavedMap:
         self.recd_datastore_id = id
         self.recd_lat = lat
         self.recd_lng = lng
-

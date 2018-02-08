@@ -19,14 +19,9 @@
 from gi.repository import Gtk
 from gi.repository import GObject
 
-import sugar3
 from sugar3.graphics import style
-from sugar3.graphics.palette import Palette
-from sugar3.graphics.palette import ToolInvoker
-from sugar3.graphics.toolbutton import ToolButton
 from sugar3.graphics.icon import Icon
 
-from constants import Constants
 
 _PREVIOUS_PAGE = 0
 _NEXT_PAGE = 1
@@ -35,7 +30,7 @@ _NEXT_PAGE = 1
 class _TrayViewport(Gtk.Viewport):
 
     __gproperties__ = {
-        'can-scroll' : (bool, None, None, False, GObject.PARAM_READABLE)
+        'can-scroll': (bool, None, None, False, GObject.PARAM_READABLE)
     }
 
     def __init__(self, orientation):
@@ -76,7 +71,7 @@ class _TrayViewport(Gtk.Viewport):
     def _scroll_to_end(self):
         if self.orientation == Gtk.Orientation.HORIZONTAL:
             adj = self.get_hadjustment()
-            adj.value = adj.upper# - self.allocation.width
+            adj.value = adj.upper  # - self.allocation.width
 
         else:
             adj = self.get_vadjustment()
@@ -132,7 +127,7 @@ class _TrayScrollButton(Gtk.Button):
         self.set_relief(Gtk.ReliefStyle.NONE)
         self.set_size_request(style.GRID_CELL_SIZE, style.GRID_CELL_SIZE)
 
-        icon = Icon(icon_name = icon_name, icon_size=Gtk.IconSize.SMALL_TOOLBAR)
+        icon = Icon(icon_name=icon_name, icon_size=Gtk.IconSize.SMALL_TOOLBAR)
         self.set_image(icon)
         icon.show()
 
@@ -140,7 +135,9 @@ class _TrayScrollButton(Gtk.Button):
 
     def set_viewport(self, viewport):
         self._viewport = viewport
-        self._viewport.connect('notify::can-scroll', self._viewport_can_scroll_changed_cb)
+        self._viewport.connect(
+            'notify::can-scroll',
+            self._viewport_can_scroll_changed_cb)
 
     def _viewport_can_scroll_changed_cb(self, viewport, pspec):
         self.set_sensitive(self._viewport.props.can_scroll)
@@ -181,19 +178,19 @@ class HTray(Gtk.VBox):
         hbox.pack_start(self.scroll_right_event, False, False, 0)
 
         self.scroll_left.set_focus_on_click(False)
-        ##self.scroll_left_event.modify_bg(Gtk.StateType.NORMAL, sugar3.graphics.style.COLOR_TOOLBAR_GREY.get_gdk_color())
-        ##self.scroll_left.modify_bg(Gtk.StateType.ACTIVE, sugar3.graphics.style.COLOR_BUTTON_GREY.get_gdk_color())
+        # self.scroll_left_event.modify_bg(Gtk.StateType.NORMAL, sugar3.graphics.style.COLOR_TOOLBAR_GREY.get_gdk_color())
+        # self.scroll_left.modify_bg(Gtk.StateType.ACTIVE, sugar3.graphics.style.COLOR_BUTTON_GREY.get_gdk_color())
 
         self.scroll_right.set_focus_on_click(False)
-        ##self.scroll_right_event.modify_bg(Gtk.StateType.NORMAL, sugar3.graphics.style.COLOR_TOOLBAR_GREY.get_gdk_color())
-        ##self.scroll_right.modify_bg(Gtk.StateType.ACTIVE, sugar3.graphics.style.COLOR_BUTTON_GREY.get_gdk_color())
+        # self.scroll_right_event.modify_bg(Gtk.StateType.NORMAL, sugar3.graphics.style.COLOR_TOOLBAR_GREY.get_gdk_color())
+        # self.scroll_right.modify_bg(Gtk.StateType.ACTIVE, sugar3.graphics.style.COLOR_BUTTON_GREY.get_gdk_color())
 
         self.scroll_left.viewport = self.viewport
         self.scroll_right.viewport = self.viewport
 
         self.connect_after("size-allocate", self._sizeAllocateCb)
 
-    def _sizeAllocateCb(self, widget, event ):
+    def _sizeAllocateCb(self, widget, event):
         self.viewport.notify('can-scroll')
 
     def get_children(self):
@@ -210,4 +207,3 @@ class HTray(Gtk.VBox):
 
     def scroll_to_end(self):
         self.viewport._scroll_to_end()
-

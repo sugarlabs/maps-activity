@@ -17,18 +17,12 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-import os
-import gc
-
 from gi.repository import Gtk
-from gi.repository import Rsvg
 from gi.repository import GObject
 from gi.repository import GdkPixbuf
 
 from sugar3.graphics.palette import Palette
 from sugar3.graphics.tray import TrayButton
-from sugar3.graphics.icon import Icon
-from sugar3.graphics import style
 
 from constants import Constants
 import utils
@@ -67,17 +61,20 @@ class SavedButton(TrayButton, GObject.GObject):
         self.set_palette(palette)
 
         self.tag_menu_item = Gtk.MenuItem(Constants.istr_tag_map)
-        self.ACTIVATE_TAG_ID = self.tag_menu_item.connect('activate', self._tag_cb)
+        self.ACTIVATE_TAG_ID = self.tag_menu_item.connect(
+            'activate', self._tag_cb)
         palette.menu.append(self.tag_menu_item)
         self.tag_menu_item.show()
 
         self.rem_menu_item = Gtk.MenuItem(Constants.istr_remove)
-        self.ACTIVATE_REMOVE_ID = self.rem_menu_item.connect('activate', self._item_remove_cb)
+        self.ACTIVATE_REMOVE_ID = self.rem_menu_item.connect(
+            'activate', self._item_remove_cb)
         palette.menu.append(self.rem_menu_item)
         self.rem_menu_item.show()
 
         self.copy_menu_item = Gtk.MenuItem(Constants.istr_copy_to_clipboard)
-        self.ACTIVATE_COPY_ID = self.copy_menu_item.connect('activate', self._item_copy_to_clipboard_cb)
+        self.ACTIVATE_COPY_ID = self.copy_menu_item.connect(
+            'activate', self._item_copy_to_clipboard_cb)
         self.get_palette().menu.append(self.copy_menu_item)
         self.copy_menu_item.show()
 
@@ -94,4 +91,3 @@ class SavedButton(TrayButton, GObject.GObject):
 
     def _itemCopyToClipboardCb(self, widget):
         self.ui.copy_to_clipboard(self.data)
-

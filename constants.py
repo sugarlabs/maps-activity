@@ -24,7 +24,6 @@ from gi.repository import Gtk
 
 import sugar3.graphics.style
 from sugar3.activity import activity
-from sugar3 import profile
 
 from instance import Instance
 from color import Color
@@ -127,15 +126,21 @@ class Constants:
 
     def __init__(self, ca):
         self.activity_id = ca._activity_id
-        self.north_img_clr, self.north_img_bw = self.load_svg_img('map-icon-croseN.svg')
-        self.south_img_clr, self.south_img_bw = self.load_svg_img('map-icon-croseS.svg')
-        self.east_omg_clr, self.east_img_bw = self.load_svg_img('map-icon-croseE.svg')
-        self.west_img_clr, self.west_img_bw = self.load_svg_img('map-icon-croseW.svg')
+        self.north_img_clr, self.north_img_bw = self.load_svg_img(
+            'map-icon-croseN.svg')
+        self.south_img_clr, self.south_img_bw = self.load_svg_img(
+            'map-icon-croseS.svg')
+        self.east_omg_clr, self.east_img_bw = self.load_svg_img(
+            'map-icon-croseE.svg')
+        self.west_img_clr, self.west_img_bw = self.load_svg_img(
+            'map-icon-croseW.svg')
 
-        info_on_svg_path = os.path.join(self.__class__.icons_path, 'corner-info.svg')
+        info_on_svg_path = os.path.join(
+            self.__class__.icons_path, 'corner-info.svg')
         info_on_svg_file = open(info_on_svg_path, 'r')
         info_on_svg_data = info_on_svg_file.read()
-        self.__class__.info_on_svg = utils.load_svg(info_on_svg_data, None, None)
+        self.__class__.info_on_svg = utils.load_svg(
+            info_on_svg_data, None, None)
         info_on_svg_file.close()
 
     def load_svg_img(self, fileName):
@@ -144,14 +149,19 @@ class Constants:
         svg_data = svg_file.read()
         svg_file.close()
 
-        color_svg = utils.load_svg(svg_data, Instance.color_stroke.hex, Instance.color_fill.hex)
+        color_svg = utils.load_svg(
+            svg_data,
+            Instance.color_stroke.hex,
+            Instance.color_fill.hex)
         color_pixbuf = color_svg.get_pixbuf()
         color_img = Gtk.Image.new_from_pixbuf(color_pixbuf)
 
-        mono_svg = utils.load_svg(svg_data, self.__class__.color_grey.hex, self.__class__.color_white.hex)
+        mono_svg = utils.load_svg(
+            svg_data,
+            self.__class__.color_grey.hex,
+            self.__class__.color_white.hex)
         mono_pixbuf = mono_svg.get_pixbuf()
         mono_img = Gtk.Image()
         mono_img.set_from_pixbuf(mono_pixbuf)
 
         return [color_img, mono_img]
-

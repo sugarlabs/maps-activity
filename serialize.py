@@ -17,22 +17,13 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-import xml.dom.minidom
 from xml.dom.minidom import getDOMImplementation
 from xml.dom.minidom import parse
-import cStringIO
 import os
-
-from gi.repository import Gtk
 
 from sugar3.datastore import datastore
 
-import utils
-import recorded
-from recorded import Recorded
 from constants import Constants
-from instance import Instance
-from savedmap import SavedMap
 
 
 def fill_media_hash(index, m):
@@ -41,34 +32,41 @@ def fill_media_hash(index, m):
         try:
             doc = parse(os.path.abspath(index))
 
-        except:
+        except BaseException:
             return
 
     try:
-        last_lat = doc.documentElement.getAttributeNode(Constants.mapLat).nodeValue
-        last_lng = doc.documentElement.getAttributeNode(Constants.mapLng).nodeValue
-        last_zoom = doc.documentElement.getAttributeNode(Constants.mapZoom).nodeValue
+        last_lat = doc.documentElement.getAttributeNode(
+            Constants.mapLat).nodeValue
+        last_lng = doc.documentElement.getAttributeNode(
+            Constants.mapLng).nodeValue
+        last_zoom = doc.documentElement.getAttributeNode(
+            Constants.mapZoom).nodeValue
         m.ca.preComet()
         m.ca.cometLogic.handleReceivedMap(last_lat, last_lng, last_zoom)
         m.ca.postComet()
 
-    except:
+    except BaseException:
         # likely an old saved map
         last_lat = 0
 
-    recd_elements = doc.documentElement.getElementsByTagName(Constants.recd_map_item)
+    recd_elements = doc.documentElement.getElementsByTagName(
+        Constants.recd_map_item)
     for el in recd_elements:
         _load_media_into_hash(el, m)
 
-    save_elements = doc.documentElement.getElementsByTagName(Constants.recd_saved_map_item)
+    save_elements = doc.documentElement.getElementsByTagName(
+        Constants.recd_saved_map_item)
     for el in save_elements:
         _load_saved_map(el, m)
 
-    save_elements = doc.documentElement.getElementsByTagName(Constants.recd_info_marker)
+    save_elements = doc.documentElement.getElementsByTagName(
+        Constants.recd_info_marker)
     for el in save_elements:
         _load_info_marker(el, m)
 
-    save_elements = doc.documentElement.getElementsByTagName(Constants.recd_line)
+    save_elements = doc.documentElement.getElementsByTagName(
+        Constants.recd_line)
     for el in save_elements:
         _load_line(el, m)
 
@@ -99,18 +97,18 @@ def _load_info_marker(el, m):
     lng_node = el.getAttributeNode(Constants.recd_lng)
     lng = lng_node.nodeValue
 
-    infoNode = el.getAttributeNode(Constants.recd_info)
+    info_node = el.getAttributeNode(Constants.recd_info)
     info = info_node.nodeValue
 
     icon_node = el.getAttributeNode(Constants.recd_icon)
     icon = icon_node.nodeValue
 
-    m.setInfo(lat,lng,info,icon)
+    m.setInfo(lat, lng, info, icon)
 
 
 def _load_line(el, m):
     id_node = el.getAttributeNode(Constants.line_id)
-    id = idNode.nodeValue
+    id = id_node.nodeValue
 
     color_node = el.getAttributeNode(Constants.line_color)
     color = color_node.nodeValue
@@ -125,31 +123,31 @@ def _load_line(el, m):
 
 
 def _load_media_into_hash(el, m):
-    if el.getAttributeNode(Constants.recd_datastore_id == None):
+    if el.getAttributeNode(Constants.recd_datastore_id is None):
         return
 
     datastore_node = el.getAttributeNode(Constants.recd_datastore_id)
 
-    if datastore_node != None:
+    if datastore_node is not None:
         datastore_id = datastore_node.nodeValue
-        if datastore_id != None:
-            #quickly check: if you have a datastoreId that the file hasn't been deleted,
-            #cause if you do, we need to flag your removal
-            #2904 trac
+        if datastore_id is not None:
+            # quickly check: if you have a datastoreId that the file hasn't been deleted,
+            # cause if you do, we need to flag your removal
+            # 2904 trac
             datastore_ob = get_media_from_datastore(datastore_id)
-            if datastore_ob != None:
+            if datastore_ob is not None:
 
                 lat = 0
                 lng = 0
 
-                if el.getAttributeNode(Constants.recd_lat) != None:
+                if el.getAttributeNode(Constants.recd_lat) is not None:
                     lat_node = el.getAttributeNode(Constants.recd_lat)
                     lat = lat_node.nodeValue
 
                 else:
                     return
 
-                if el.getAttributeNode(Constants.recd_lng) != None:
+                if el.getAttributeNode(Constants.recd_lng) is not None:
                     lng_node = el.getAttributeNode(Constants.recd_lng)
                     lng = lng_node.nodeValue
 
@@ -164,7 +162,7 @@ def get_media_from_datastore(id):
     try:
         media_object = datastore.get(id)
 
-    except:
+    except BaseException:
         pass
 
     return media_object
@@ -173,12 +171,12 @@ def get_media_from_datastore(id):
 def fill_recd_from_node(recd, el):
     lat_node = el.getAttributeNode(Constants.recd_lat)
 
-    if lat_node != None:
+    if lat_node is not None:
         recd.latitude = lat_node.nodeValue
 
     lng_node = el.getAttributeNode(Constants.recd_lng)
 
-    if lng_node != None:
+    if lng_node is not None:
         recd.longitude = lng_node.nodeValue
 
     return recd
@@ -210,9 +208,9 @@ def _add_save_xml_attrs(el, smap):
     el.setAttribute(Constants.recd_zoom, str(smap.zoom))
     el.setAttribute(Constants.recd_notes, str(smap.notes))
     el.setAttribute(Constants.recd_tags, smap.tags)
-    #el.setAttribute(Constants.recdDensity, str(smap.density))
+    # el.setAttribute(Constants.recdDensity, str(smap.density))
 
-    if smap.recdDatastoreId != None:
+    if smap.recdDatastoreId is not None:
         el.setAttribute(Constants.recd_recd_id, smap.recdDatastoreId)
         el.setAttribute(Constants.recd_recd_lat, smap.recd_lat)
         el.setAttribute(Constants.recd_recd_lng, smap.recd_lng)
@@ -223,7 +221,7 @@ def save_media_hash(m):
     album = impl.createDocument(None, Constants.recd_album, None)
     root = album.documentElement
 
-    for i in range (0, len(m.recs)):
+    for i in range(0, len(m.recs)):
         recd = m.recs[i]
         media_el = album.createElement(Constants.recd_map_item)
         root.appendChild(media_el)
@@ -239,11 +237,10 @@ def save_media_hash(m):
         root.appendChild(media_el)
         _add_line_xml_attrs(media_el, i_marker.split(";~"))
 
-    for i in range (0, len(m.savedMaps)):
+    for i in range(0, len(m.savedMaps)):
         smap = m.savedMaps[i]
         save_el = album.createElement(Constants.recd_saved_map_item)
-        root.appendChild(saveEl)
+        root.appendChild(save_el)
         _add_save_xml_attrs(save_el, smap)
 
     return album
-

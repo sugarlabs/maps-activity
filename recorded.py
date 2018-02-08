@@ -20,7 +20,6 @@
 import os
 import map
 
-from gi.repository import Gtk
 from gi.repository import GdkPixbuf
 
 from constants import Constants
@@ -67,7 +66,7 @@ class Recorded:
         pb = None
 
         fp = self.get_filepath()
-        if (fp != None):
+        if (fp is not None):
             pb = GdkPixbuf.Pixbuf.new_from_file(fp)
 
         return pb
@@ -79,6 +78,7 @@ class Recorded:
         return str(self.thumb_filename)
 
     def getThumbPath(self):
-        thumbPath = os.path.join( Instance.instancePath, self.getThumbBasename() )
+        thumbPath = os.path.join(
+            Instance.instancePath,
+            self.getThumbBasename())
         return thumbPath
-

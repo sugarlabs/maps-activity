@@ -20,20 +20,17 @@
 import os
 
 from sugar3 import profile
-from sugar3 import util
-from sugar3.activity import activity
-import shutil
-
 from color import Color
+
 
 class Instance:
 
     key = profile.get_pubkey()
-    #joyride ...
-    #keyHash = util.sha_data(key)
-    #8.2...
-    #keyHash = util._sha_data(key)
-    #keyHashPrintable = util.printable_hash(keyHash)
+    # joyride ...
+    # keyHash = util.sha_data(key)
+    # 8.2...
+    # keyHash = util._sha_data(key)
+    # keyHashPrintable = util.printable_hash(keyHash)
     nick_name = profile.get_nick_name()
 
     color_fill = Color()
@@ -48,7 +45,8 @@ class Instance:
     def __init__(self, ca):
         self.__class__.instance_id = ca._activity_id
 
-        self.__class__.instance_path = os.path.join(ca.get_activity_root(), "instance")
+        self.__class__.instance_path = os.path.join(
+            ca.get_activity_root(), "instance")
         recreate_tmp()
 
         self.__class__.data_path = os.path.join(ca.get_activity_root(), "data")
@@ -63,4 +61,3 @@ def recreate_tmp():
 def recreate_data():
     if not os.path.exists(Instance.data_path):
         os.makedirs(Instance.data_dath)
-

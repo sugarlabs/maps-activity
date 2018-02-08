@@ -45,7 +45,7 @@ class P5(Gtk.DrawingArea):
         self.redraw(ctx, rect.width, rect.height)
 
     def redraw_canvas(self):
-        #called from update
+        # called from update
         if self.get_window():
             alloc = self.get_allocation()
             self.queue_draw_area(0, 0, alloc.width, alloc.height)
@@ -54,7 +54,7 @@ class P5(Gtk.DrawingArea):
         self.queue_draw_area(0, 0, width, height)
 
     def update(self):
-        #paint thread -- call redraw_canvas, which calls expose
+        # paint thread -- call redraw_canvas, which calls expose
         self.redraw_canvas()
 
     def fill_rect(self, ctx, col, w, h):
@@ -79,6 +79,5 @@ class P5(Gtk.DrawingArea):
         self.fire_button()
 
     def fire_button(self):
-        #for extending
+        # for extending
         pass
-

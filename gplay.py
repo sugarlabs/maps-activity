@@ -18,17 +18,11 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-#look at jukeboxactivity.py
+# look at jukeboxactivity.py
 
 from gi.repository import Gtk
 from gi.repository import Gst
 from gi.repository import GObject
-
-from gi.repository import Gdk
-from gi.repository import GdkX11
-
-import sys
-import time
 
 GObject.threads_init()
 Gst.init([])
@@ -56,11 +50,13 @@ class Gplay:
         bus = player.get_bus()
         bus.enable_sync_message_emission()
         bus.add_signal_watch()
-        self.SYNC_ID = bus.connect('sync-message::element', self.on_sync_message)
+        self.SYNC_ID = bus.connect(
+            'sync-message::element',
+            self.on_sync_message)
         self.players.append(player)
 
     def get_player(self):
-        return self.players[len(self.players)-1]
+        return self.players[len(self.players) - 1]
 
     def on_sync_message(self, bus, message):
         if message.structure is None:
@@ -74,13 +70,13 @@ class Gplay:
     def set_location(self, location):
         print("set_location: ", location)
         if (self.getPlayer().get_property('uri') == location):
-            self.seek(gst.SECOND*0)
+            self.seek(Gst.SECOND * 0)
             return
 
         self.get_player().set_state(Gst.State.READY)
         self.get_player().set_property('uri', location)
 
-        ext = location[len(location)-3:]
+        ext = location[len(location) - 3:]
         if (ext == "jpg"):
             self.pause()
 
@@ -90,21 +86,28 @@ class Gplay:
         "Returns a (position, duration) tuple"
         try:
             position, format = self.get_player().query_position(Gst.Format.TIME)
-        except:
+        except BaseException:
             position = Gst.CLOCK_TIME_NONE
 
         try:
             duration, format = self.getPlayer().query_duration(Gst.Format.TIME)
-        except:
+        except BaseException:
             duration = Gst.CLOCK_TIME_NONE
 
         return (position, duration)
 
     def seek(self, location):
-        event = Gst.Event.new_seek(1.0, Gst.Format.TIME, Gst.SeekFlags.FLUSH | Gst.SeekFlags.ACCURATE, Gst.SeekType.SET, location, Gst.SeekType.NONE, 0)
+        event = Gst.Event.new_seek(
+            1.0,
+            Gst.Format.TIME,
+            Gst.SeekFlags.FLUSH | Gst.SeekFlags.ACCURATE,
+            Gst.SeekType.SET,
+            location,
+            Gst.SeekType.NONE,
+            0)
         res = self.get_player().send_event(event)
         if res:
-            self.get_player().set_new_stream_time(0L)
+            self.get_player().set_new_stream_time(0)
 
     def pause(self):
         self.playing = False
@@ -139,11 +142,10 @@ class PlayVideoWindow(Gtk.EventBox):
         self.set_app_paintable(True)
 
     def set_sink(self, sink):
-        if self.imagesink != None:
+        if self.imagesink is not None:
             assert self.get_window().xid
             self.imagesink = None
             del self.imagesink
 
         self.imagesink = sink
         self.imagesink.set_xwindow_id(self.window.xid)
-

@@ -51,7 +51,8 @@ class GIdleThread(object):
     """
 
     def __init__(self, generator, queue=None):
-        assert hasattr(generator, 'next'), 'The generator should be an iterator'
+        assert hasattr(
+            generator, 'next'), 'The generator should be an iterator'
         self._generator = generator
         self._queue = queue
         self._idle_id = 0
@@ -61,7 +62,9 @@ class GIdleThread(object):
         """Start the generator. Default priority is low, so screen updates
         will be allowed to happen.
         """
-        idle_id = GObject.idle_add(self.__generator_executer, priority=priority)
+        idle_id = GObject.idle_add(
+            self.__generator_executer,
+            priority=priority)
         self._idle_id = idle_id
         return idle_id
 
@@ -90,7 +93,7 @@ class GIdleThread(object):
         return self._idle_id != 0
 
     error = property(lambda self: self._error,
-                     doc="Return a possible exception that had occured "\
+                     doc="Return a possible exception that had occured "
                          "during execution of the generator")
 
     def __generator_executer(self):
@@ -107,7 +110,7 @@ class GIdleThread(object):
         except StopIteration:
             self._idle_id = 0
             return False
-        except Exception, e:
+        except Exception as e:
             self._error = e
             traceback.print_exc()
             self._idle_id = 0
@@ -193,4 +196,3 @@ if __name__ == '__main__':
     c.start(priority=GObject.PRIORITY_DEFAULT)
     s.start()
     s.wait(3)
-

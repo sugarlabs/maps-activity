@@ -20,12 +20,9 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-from sugar3 import env
-
 import logging
-import os
 
-from gi.repository import Gtk
+from gi.repository import Gtk, Gdk
 from gi.repository import GObject
 from gi.repository import WebKit
 
@@ -45,7 +42,7 @@ class WebViewer(Gtk.ScrolledWindow):
 class _PopupCreator(GObject.GObject):
 
     __gsignals__ = {
-        'popup-created':  (GObject.SIGNAL_RUN_FIRST, GObject.TYPE_NONE, ([]))
+        'popup-created': (GObject.SIGNAL_RUN_FIRST, GObject.TYPE_NONE, ([]))
     }
 
     def __init__(self, parent_window):
@@ -61,8 +58,9 @@ class _PopupCreator(GObject.GObject):
         self._dialog.realize()
         self._dialog.window.set_type_hint(Gdk.WindowTypeHint.DIALOG)
 
-        self._embed = Browser()  ## Where it's from?
-        self._vis_sid = self._embed.connect('notify::visible', self._notify_visible_cb)
+        self._embed = Browser()  # Where it's from?
+        self._vis_sid = self._embed.connect(
+            'notify::visible', self._notify_visible_cb)
         self._dialog.add(self._embed)
 
     def _notify_visible_cb(self, embed, param):
@@ -94,4 +92,3 @@ class _PopupCreator(GObject.GObject):
 
     def get_embed(self):
         return self._embed
-

@@ -25,27 +25,23 @@ from sugar3.graphics.objectchooser import ObjectChooser
 
 class FilePicker:
 
-	def __init__(self):
-		pass
+    def __init__(self):
+        pass
 
-	def show(self):
-		title = None
-		parent = None
-		file = None
-		job = None
-		chooser = ObjectChooser()
+    def show(self):
+        job = None
+        chooser = ObjectChooser()
 
-		try:
-			result = chooser.run()
-			if result == Gtk.ResponseType.ACCEPT:
-				jobject = chooser.get_selected_object()
+        try:
+            result = chooser.run()
+            if result == Gtk.ResponseType.ACCEPT:
+                jobject = chooser.get_selected_object()
 
-				if jobject and jobject.file_path:
-					job = jobject
+                if jobject and jobject.file_path:
+                    job = jobject
 
-		finally:
-			chooser.destroy()
-			del chooser
+        finally:
+            chooser.destroy()
+            del chooser
 
-		return job
-
+        return job
