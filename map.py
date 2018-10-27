@@ -29,6 +29,7 @@ import random
 from gi.repository import Gtk
 from gi.repository import Gdk
 from gi.repository import GObject
+from gi.repository import GLib
 from gi.repository import GdkPixbuf
 
 from sugar3.graphics.toolbarbox import ToolbarBox
@@ -95,7 +96,7 @@ class Map(activity.Activity):
         Constants(self)
         self.modify_bg(Gtk.StateType.NORMAL, Constants.color_bg.g_color)
 
-        GObject.idle_add(self._initme, None)
+        GLib.idle_add(self._initme, None)
 
     def _initme(self, userdata=None):
         self.basePath = activity.get_bundle_path()
@@ -815,7 +816,7 @@ class Map(activity.Activity):
 
     def _fakeTrayVisibleNotifyCb(self, widget, event):
         if self.SAVING_SEARCH:
-            GObject.idle_add(self._saveSearch2)
+            GLib.idle_add(self._saveSearch2)
 
     def _saveSearch2(self):
         # add SavedMap

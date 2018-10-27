@@ -26,7 +26,7 @@ import time
 import urllib
 import json
 
-from gi.repository import GObject
+from gi.repository import GLib
 
 
 class ServerLogic:
@@ -76,7 +76,7 @@ class ServerLogic:
                 locY = params[2][1]
                 up = params[3][1]
                 rt = params[4][1]
-                GObject.idle_add(
+                GLib.idle_add(
                     self.ca.showMedia,
                     id,
                     locX,
@@ -89,13 +89,13 @@ class ServerLogic:
             elif (file_name == "placeAddMedia.js"):
                 lat = params[0][1]
                 lng = params[1][1]
-                GObject.idle_add(self.ca.placeAddMedia, lat, lng)
+                GLib.idle_add(self.ca.placeAddMedia, lat, lng)
                 self.proceed_headers.append(
                     ("Content-type", "text/javascript"))
                 kick_through_comet = False
 
             elif (file_name == "hideMedia.js"):
-                GObject.idle_add(self.ca.hideMedia)
+                GLib.idle_add(self.ca.hideMedia)
 
             elif (file_name == "getImage.js"):
                 localfile = open(
@@ -118,7 +118,7 @@ class ServerLogic:
                 zoom = params[2][1]
                 x = params[3][1]
                 y = params[4][1]
-                GObject.idle_add(
+                GLib.idle_add(
                     self.ca.updateMapMetaData, lat, lng, zoom, x, y)
 
             elif (file_name == "addSavedMap.js"):
@@ -127,7 +127,7 @@ class ServerLogic:
                 longitudes = params[1][1]
                 zooms = params[2][1]
                 notes = params[3][1]
-                GObject.idle_add(
+                GLib.idle_add(
                     self.ca.addSavedMap,
                     latitudes,
                     longitudes,
@@ -142,11 +142,11 @@ class ServerLogic:
                 icon = params[3][1]
                 if(params[4][1] == "True"):
                     isNew = True
-                    GObject.idle_add(self.ca.cometLogic.forceupdate)
+                    GLib.idle_add(self.ca.cometLogic.forceupdate)
                 else:
                     isNew = False
 
-                GObject.idle_add(
+                GLib.idle_add(
                     self.ca.addInfoMarker, lat, lng, info, icon, isNew)
 
             elif (file_name == "addLine.js"):
@@ -154,7 +154,7 @@ class ServerLogic:
                 color = params[1][1]
                 thickness = params[2][1]
                 pts = params[3][1]  # send pts separated with | instead of ,
-                GObject.idle_add(self.ca.addLine, id, color, thickness, pts, 1)
+                GLib.idle_add(self.ca.addLine, id, color, thickness, pts, 1)
 
             elif (file_name == "promptSearch.js"):
                 address = params[0][1]

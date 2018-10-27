@@ -20,6 +20,7 @@
 from __future__ import generators
 
 from gi.repository import GObject
+from gi.repository import GLib
 
 import time
 import traceback
@@ -62,7 +63,7 @@ class GIdleThread(object):
         """Start the generator. Default priority is low, so screen updates
         will be allowed to happen.
         """
-        idle_id = GObject.idle_add(
+        idle_id = GLib.idle_add(
             self.__generator_executer,
             priority=priority)
         self._idle_id = idle_id
@@ -74,7 +75,7 @@ class GIdleThread(object):
         """
         clock = time.clock
         start_time = clock()
-        main = GObject.main_context_default()
+        main = GLib.main_context_default()
         while self.is_alive():
             main.iteration(False)
             if timeout and (clock() - start_time >= timeout):
@@ -84,7 +85,7 @@ class GIdleThread(object):
         """Force the generator to stop running.
         """
         if self.is_alive():
-            GObject.source_remove(self._idle_id)
+            GLib.source_remove(self._idle_id)
             self._idle_id = 0
 
     def is_alive(self):
@@ -182,7 +183,7 @@ if __name__ == '__main__':
     c = GIdleThread(counter(23), queue)
     s = GIdleThread(shower(queue))
 
-    main = GObject.main_context_default()
+    main = GLib.main_context_default()
     c.start()
     s.start()
     s.wait(2)
@@ -192,7 +193,7 @@ if __name__ == '__main__':
     c = GIdleThread(counter(23), queue)
     s = GIdleThread(shower(queue))
 
-    main = GObject.main_context_default()
+    main = GLib.main_context_default()
     c.start(priority=GObject.PRIORITY_DEFAULT)
     s.start()
     s.wait(3)

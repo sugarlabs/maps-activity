@@ -19,7 +19,7 @@
 
 import cairo
 
-from gi.repository import GObject
+from gi.repository import GLib
 
 from p5 import P5
 from constants import Constants
@@ -51,7 +51,7 @@ class PhotoCanvas(P5):
             if self.cacheWid != w:
                 if self.SCALING_IMG_ID == 0:
                     self.draw_img = None
-                    self.SCALING_IMG_ID = GObject.idle_add(
+                    self.SCALING_IMG_ID = GLib.idle_add(
                         self.resize_image, w, h)
 
             if self.draw_img is not None:
