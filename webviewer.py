@@ -22,9 +22,12 @@
 
 import logging
 
+import gi
 from gi.repository import Gtk, Gdk
 from gi.repository import GObject
-from gi.repository import WebKit
+gi.require_version('WebKit2', '4.0')
+from gi.repository import WebKit2
+
 
 
 class WebViewer(Gtk.ScrolledWindow):
@@ -32,7 +35,7 @@ class WebViewer(Gtk.ScrolledWindow):
     def __init__(self):
         Gtk.ScrolledWindow.__init__(self)
 
-        self.browser = WebKit.WebView()
+        self.browser = WebKit2.WebView()
         self.add(self.browser)
 
     def load_uri(self, uri):
