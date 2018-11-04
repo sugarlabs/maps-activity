@@ -59,10 +59,10 @@ class Gplay:
         return self.players[len(self.players) - 1]
 
     def on_sync_message(self, bus, message):
-        if message.structure is None:
+        if message.get_structure is None:
             return True
 
-        if message.structure.get_name() == 'prepare-xwindow-id':
+        if message.get_structure.get_name() == 'prepare-xwindow-id':
             self.window.set_sink(message.src)
             message.src.set_property('force-aspect-ratio', True)
             return True
