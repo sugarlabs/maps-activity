@@ -127,7 +127,7 @@ class _TrayScrollButton(Gtk.Button):
         self.set_relief(Gtk.ReliefStyle.NONE)
         self.set_size_request(style.GRID_CELL_SIZE, style.GRID_CELL_SIZE)
 
-        icon = Icon(icon_name=icon_name, icon_size=Gtk.IconSize.SMALL_TOOLBAR)
+        icon = Icon(icon_name=icon_name, pixel_size=Gtk.IconSize.SMALL_TOOLBAR)
         self.set_image(icon)
         icon.show()
 

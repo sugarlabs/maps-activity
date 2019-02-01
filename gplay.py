@@ -19,8 +19,9 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 # look at jukeboxactivity.py
-
+import gi
 from gi.repository import Gtk
+gi.require_version('Gst', '1.0')
 from gi.repository import Gst
 from gi.repository import GLib
 
